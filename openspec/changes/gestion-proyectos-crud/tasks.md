@@ -58,12 +58,12 @@ Threat matrix: N/A (design.md confirms no shell/subprocess/VCS boundary in this 
 
 ## Phase 3 (PR 3 — proyecto detail/edit/delete + inspiraciones)
 
-- [ ] 3.1 RED `tests/lib/forms/parse-inspiracion.test.ts` — `url_origen`/`tipo_referencia`/`notas` branches.
-- [ ] 3.2 GREEN `src/lib/forms/parse-inspiracion.ts`.
-- [ ] 3.3 RED `tests/app/proyectos/[id]/actions.test.ts` — edit, confirmed delete, `NotFoundError` on missing id, add/delete inspiracion.
-- [ ] 3.4 GREEN `src/app/proyectos/[id]/{page.tsx,actions.ts}` — `getProyectoConDetalle`, inspiraciones sub-list, reuse `proyecto-form`.
-- [ ] 3.5 RED/GREEN `src/components/gallery/proyecto-card.tsx` — title wrapped in `<Link href="/proyectos/[id]">`; RTL test asserts the link and `SelectionCheckbox` coexist and comparison-mode selection still works per `project-gallery` spec scenario.
-- [ ] 3.6 `npm test` + `npm run build`.
+- [x] 3.1 RED `tests/lib/forms/parse-inspiracion.test.ts` — `url_origen`/`tipo_referencia`/`notas` branches.
+- [x] 3.2 GREEN `src/lib/forms/parse-inspiracion.ts`.
+- [x] 3.3 RED `tests/app/proyectos/[id]/actions.test.ts` — edit, confirmed delete, `NotFoundError` on missing id, add/delete inspiracion.
+- [x] 3.4 GREEN `src/app/proyectos/[id]/{page.tsx,actions.ts}` — `getProyectoConDetalle`, inspiraciones sub-list, reuse `proyecto-form`.
+- [x] 3.5 RED/GREEN `src/components/gallery/proyecto-card.tsx` — title wrapped in `<Link href="/proyectos/[id]">`; RTL test asserts the link and `SelectionCheckbox` coexist and comparison-mode selection still works per `project-gallery` spec scenario. **Resolved in favor of the literal spec scenario over design.md's disjoint-target assumption** — see apply-progress.md.
+- [x] 3.6 `npm test` + `npm run build`.
 
 ## Phase 4 (PR 4 — taxonomy screens + gallery entry point)
 

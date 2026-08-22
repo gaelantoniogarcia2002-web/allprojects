@@ -1,11 +1,13 @@
 # Apply Progress: Fase 3 — CRUD Management for Proyecto, Inspiracion, Categoria, Contacto
 
-**Batch**: 2 of N (merged with batch 1)
+**Batch**: 3 of N (merged with batches 1–2)
 **Branch (batch 1)**: `pr1-repo-layer` (base: `feature/gestion-proyectos-crud`)
 **Branch (batch 2)**: `pr2-proyecto-create` (base: `pr1-repo-layer`)
+**Branch (batch 3)**: `pr3-proyecto-detail` (base: `pr2-proyecto-create`)
 **Mode**: Strict TDD
 **Scope (batch 1)**: Phase 0 (Server Action Spike) + Phase 1 (PR 1 — Repository layer)
 **Scope (batch 2)**: Phase 2 (PR 2 — Proyecto creation, tasks 2.1–2.7)
+**Scope (batch 3)**: Phase 3 (PR 3 — Proyecto detail/edit/delete + inspiraciones, tasks 3.1–3.6)
 
 ## Phase 0 Spike Outcome (governs the shape of Phases 2–4)
 
@@ -51,6 +53,48 @@ split, no extra indirection layer.
 - [x] 2.6 Test: `tests/app/proyectos/nuevo/actions.test.ts` "creating a proyecto with the same contactoId submitted twice stays idempotent" — asserts exactly one `proyecto_contactos` row after submitting a duplicated `contactoId`, confirming the action layer doesn't break `vincularContacto`'s `onConflictDoNothing` idempotency (relevant for Phase 3 edit-form reuse of `ProyectoForm`).
 - [x] 2.7 `npm test` (156/156 passing) + `npm run build` (success, TypeScript passed, new routes `ƒ /proyectos/nuevo` listed in build output)
 
+### Phase 3 (PR 3 — proyecto detail/edit/delete + inspiraciones)
+- [x] 3.1 RED `tests/lib/forms/parse-inspiracion.test.ts` (5 cases: valid with notas omitted, valid with notas present, empty/whitespace `url_origen`, invalid `tipo_referencia`, whitespace-only `notas` collapses to `null`)
+- [x] 3.2 GREEN `src/lib/forms/parse-inspiracion.ts` — pure `FormData → ParseResult<Omit<NuevaInspiracion,"proyectoId">>`, `TIPOS_REFERENCIA` enum check via `db/schema`, `notas` optional/nullable, same `snake_case` field-name convention as `parse-proyecto.ts`
+- [x] 3.3 RED `tests/app/proyectos/[id]/actions.test.ts` (9 cases across 4 describe blocks: `editarProyectoAction` updates fields + revalidates / `{ok:false}` on missing id / `{ok:false}` without updating on invalid data; `eliminarProyectoAction` cascades proyecto+contactos+inspiraciones then redirects to `/` / `{ok:false}` on missing id; `agregarInspiracionAction` persists a row + revalidates / `{ok:false}` and inserts nothing on invalid `tipo_referencia`; `eliminarInspiracionAction` removes the row + revalidates / `{ok:false}` on missing id)
+- [x] 3.4 GREEN `src/app/proyectos/[id]/actions.ts` (`editarProyectoAction`/`eliminarProyectoAction`/`agregarInspiracionAction`/`eliminarInspiracionAction`, all `"use server"`, `proyectoId`/`inspiracionId` pre-bound via `.bind(null, id)` so the edit/add actions match `ProyectoForm`'s `(prevState, formData) => Promise<ActionResult>` shape) + `src/app/proyectos/[id]/page.tsx` (async Server Component, `notFound()` on a missing/invalid id, reuses `ProyectoForm` pre-filled via `defaultValues`/`selectedContactoIds`, inspiraciones `<ul>` with a per-row delete form, `ConfirmSubmitButton`-gated delete-proyecto form) + `src/components/forms/inspiracion-form.tsx` (new shared client component, same `useActionState` pattern as `proyecto-form.tsx`, for the inline "add inspiracion" form)
+- [x] 3.5 RED/GREEN `src/components/gallery/proyecto-card.tsx` — see "Design/Spec Discrepancy Resolution (3.5)" below
+- [x] 3.6 `npm test` (172/172 passing) + `npm run build` (success, TypeScript passed, `ƒ /proyectos/[id]` route listed in build output)
+
+## Design/Spec Discrepancy Resolution (3.5)
+
+`design.md`'s "Card → detail link" decision states the title-only `<Link>` and the sibling
+`SelectionCheckbox` are disjoint click targets, so "no suppression logic is needed." The
+`project-gallery` spec delta (`specs/project-gallery/spec.md`), however, states as a hard
+requirement: "The system MUST render each gallery card as a link ... and MUST suppress
+that navigation while comparison mode is active," with the literal scenario "GIVEN the
+gallery is in comparison mode WHEN the user activates a card THEN the card participates in
+comparison selection instead of navigating."
+
+Per this batch's instruction to follow the test over the design doc on conflict, a RED test
+was written directly against the literal scenario: **"suppresses the detail link during
+comparison mode so activating the card selects instead of navigating"**
+(`src/components/gallery/proyecto-card.test.tsx`). It asserts that, in `comparisonMode`,
+`screen.queryByRole("link", { name: tile.titulo })` is **absent** — i.e., the title itself
+must not remain an activatable navigation target while comparison mode is on, not merely
+"the checkbox happens to be a separate element from the link."
+
+**Resolution: the design's disjoint-target reasoning does NOT satisfy the spec as written.**
+The design's own rationale ("a checkbox click can never bubble through the link") only
+proves the checkbox is unaffected by the link — it says nothing about a user directly
+activating the title link itself while comparison mode is active, which the spec's
+"activates a card" scenario does not restrict to the checkbox specifically, and the
+Requirement's plain-language MUST clause ("suppress that navigation while comparison mode
+is active") is unconditional, not scoped to "unless the user clicks the title precisely."
+Implemented instead: `proyecto-card.tsx` renders `tile.titulo` as plain text (no `<a>`)
+when `comparisonMode` is `true`, and as `<Link href={\`/proyectos/${tile.id}\`}>` otherwise.
+This is the "render title as plain text" branch from the batch's own decision tree, not the
+"no suppression logic" branch. No separate "Ver detalle" affordance was added during
+comparison mode — the spec's Requirement and both its scenarios only describe (a) normal-mode
+navigation and (b) comparison-mode suppression; a tertiary escape-hatch link is unrequested
+scope not backed by any scenario, so it was intentionally left out to keep the diff
+minimal and spec-traceable.
+
 ## Files Changed (Phase 1 — repository layer)
 
 | File | Action | What Was Done |
@@ -93,6 +137,27 @@ repository/test layer (`grep` confirmed — UI consumption arrives in Phases 2�
 
 No production files outside `src/lib/forms/`, `src/app/proyectos/nuevo/` and `src/components/forms/` were touched in this batch; Phase 1's repository layer is consumed as-is (`createProyecto`, `vincularContacto`).
 
+## Files Changed (Phase 3 — proyecto detail/edit/delete + inspiraciones)
+
+| File | Action | What Was Done |
+|------|--------|----------------|
+| `src/lib/forms/parse-inspiracion.ts` | Created | Pure `FormData → ParseResult<Omit<NuevaInspiracion,"proyectoId">>`; validates `url_origen` non-empty and `tipo_referencia` against `TIPOS_REFERENCIA`; `notas` optional, blank collapses to `null` |
+| `src/app/proyectos/[id]/actions.ts` | Created | `"use server"` `editarProyectoAction`, `eliminarProyectoAction`, `agregarInspiracionAction`, `eliminarInspiracionAction` — each catches errors via `toActionError`, `revalidatePath("/")` after mutations, `redirect("/")` after delete (outside the try block) |
+| `src/app/proyectos/[id]/page.tsx` | Created | Async Server Component; `notFound()` on missing/invalid id; renders `ProyectoForm` pre-filled from `getProyectoConDetalle`; inspiraciones `<ul>` with per-row delete `<form>`; inline `InspiracionForm`; `ConfirmSubmitButton`-gated delete-proyecto `<form>`; two inline `"use server"` wrapper functions (`eliminarInspiracion`, `eliminarProyecto`) adapt the `Promise<ActionResult>`-returning actions to the `(formData) => Promise<void>` type React's plain `<form action>` prop requires (`editarProyectoAction`/`agregarInspiracionAction` avoid this because they're bound into `ProyectoForm`'s `useActionState`, which accepts `Promise<ActionResult>`) |
+| `src/components/forms/inspiracion-form.tsx` | Created | Shared client component (`useActionState`), same shape as `proyecto-form.tsx`, for the inline "add inspiracion" form |
+| `src/components/gallery/proyecto-card.tsx` | Modified | Title renders as `<Link href={/proyectos/${id}}>` when `comparisonMode` is false, plain text when `true` — see Discrepancy Resolution above |
+| `tests/lib/forms/parse-inspiracion.test.ts` | Created | 5 tests covering every validation branch |
+| `tests/app/proyectos/[id]/actions.test.ts` | Created | 9 tests across 4 describe blocks (edit, delete+cascade, add inspiracion, delete inspiracion) |
+| `src/components/gallery/proyecto-card.test.tsx` | Modified | Added 2 tests: title-link href in normal mode; link absence + text + checkbox presence in comparison mode |
+
+No production files outside `src/lib/forms/parse-inspiracion.ts`, `src/app/proyectos/[id]/`,
+`src/components/forms/inspiracion-form.tsx` and `src/components/gallery/proyecto-card.tsx`
+were touched in this batch. Phases 1–2's repository layer and shared form components
+(`proyecto-form.tsx`, `contacto-checkbox-list.tsx`, `form-error.tsx`,
+`confirm-submit-button.tsx`, `result.ts`, `parse-proyecto.ts`) are consumed as-is with zero
+modification, confirming the Phase 2 apply-progress note that these were built reusable for
+Phase 3.
+
 ## TDD Cycle Evidence
 
 | Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
@@ -110,13 +175,24 @@ No production files outside `src/lib/forms/`, `src/app/proyectos/nuevo/` and `sr
 | 2.5 | `tests/components/forms/{contacto-checkbox-list,form-error,confirm-submit-button,proyecto-form}.test.tsx` | Component (RTL) | N/A (new files) | ⚠️ Deviation — `contacto-checkbox-list.tsx`/`form-error.tsx`/`confirm-submit-button.tsx`/`proyecto-form.tsx` were authored together with `page.tsx`/`actions.ts` (2.4) since `page.tsx` imports `ProyectoForm` directly; RTL tests were then written and run against the already-existing components, confirmed passing on first run — not a pre-written-test RED gate for these four files specifically | ✅ Passed | ✅ 3+3+3+3 = 12 cases covering checked/unchecked/pre-checked payloads, no-result/ok/fail error rendering, confirm accept/decline/no-message, and full-form submit + inline-error + defaultValues pre-fill | ➖ None needed |
 | 2.6 | `tests/app/proyectos/nuevo/actions.test.ts` (same file as 2.3) | Integration (action) | ✅ 4/4 (post-2.3 state) | ✅ Written (asserted `detail.contactos` length before the idempotency guard existed at the action layer — the repo-level guard already existed from `vincularContacto`, this test proves the action layer doesn't bypass it) | ✅ Passed on first run (no production change required beyond 2.4's `crearProyectoAction`) | ➖ Single (one duplicate-id scenario, mirrors the existing `vincularContacto` idempotency contract) | ➖ None needed |
 | 2.7 | Full suite | — | — | — | ✅ 156/156 `npm test`; `npm run build` succeeded (TypeScript pass, new `ƒ /proyectos/nuevo` route) | — | — |
+| 3.1–3.2 | `tests/lib/forms/parse-inspiracion.test.ts` | Unit | N/A (new file) | ✅ Written (unresolved import for `parseInspiracion`) | ✅ Passed | ✅ 5 cases (valid w/o notas, valid w/ notas, empty url_origen, invalid tipo_referencia, whitespace notas → null) | ➖ None needed — kept as a small pure function per design, mirrors `parse-proyecto.ts` |
+| 3.3–3.4 | `tests/app/proyectos/[id]/actions.test.ts` | Integration (action, `makeTestDb()` + mocked `next/cache`/`next/navigation`) | N/A (new file) | ✅ Written (unresolved imports for all 4 exported actions) | ✅ Passed | ✅ 9 cases (edit happy path, edit missing id, edit validation failure, delete cascade + redirect, delete missing id, add inspiracion happy path, add inspiracion validation failure, delete inspiracion happy path, delete inspiracion missing id) | ➖ None needed |
+| 3.5 | `src/components/gallery/proyecto-card.test.tsx` | Component (RTL) | ✅ 5/5 (pre-3.5 state) | ✅ Written (`getByRole("link", {name: tile.titulo})` failed — no link existed yet in either mode) | ✅ Passed | ✅ 2 cases (title-link href present outside comparison mode; link absent + text + checkbox present inside comparison mode — the second case is the literal `project-gallery` "Card navigation suppressed during comparison mode" scenario) | ➖ None needed |
+| 3.6 | Full suite | — | — | — | ✅ 172/172 `npm test`; `npm run build` succeeded (TypeScript pass, new `ƒ /proyectos/[id]` route) | — | — |
 
-### Test Summary
+### Test Summary (Phase 2)
 - **Total tests written/modified this batch (Phase 2)**: 39 new test cases — `parse-proyecto.test.ts` (14), `result.test.ts` (8), `actions.test.ts` (5), `contacto-checkbox-list.test.tsx` (3), `form-error.test.tsx` (3), `confirm-submit-button.test.tsx` (3), `proyecto-form.test.tsx` (3)
 - **Total tests passing**: 156/156 (full suite, `npm test`) — up from 117/117 after Phase 1
 - **Layers used**: Unit (22: `parse-proyecto` + `result`), Integration (5: action + DB + mocked Next APIs), Component/RTL (12)
 - **Approval tests**: 0 in this batch (no refactoring of existing behavior)
 - **Pure functions created**: 2 (`parseProyecto`, `toActionError`) — both zero-DB, zero-Next-runtime, directly unit-testable per design's Testing Strategy
+
+### Test Summary (Phase 3)
+- **Total tests written/modified this batch (Phase 3)**: 16 new/modified test cases — `parse-inspiracion.test.ts` (5), `tests/app/proyectos/[id]/actions.test.ts` (9), `proyecto-card.test.tsx` (2 added to the existing 5)
+- **Total tests passing**: 172/172 (full suite, `npm test`) — up from 156/156 after Phase 2
+- **Layers used**: Unit (5: `parse-inspiracion`), Integration (9: action + DB + mocked Next APIs), Component/RTL (2)
+- **Approval tests**: 0 in this batch (no refactoring of existing behavior)
+- **Pure functions created**: 1 (`parseInspiracion`) — zero-DB, zero-Next-runtime, directly unit-testable
 
 ## Work Unit Evidence (Work Unit 1 — Repository layer)
 
@@ -134,6 +210,14 @@ No production files outside `src/lib/forms/`, `src/app/proyectos/nuevo/` and `sr
 | Runtime harness command/scenario and exact result | N/A — no e2e harness configured (`openspec/config.yaml`); proven by `tests/app/proyectos/nuevo/actions.test.ts` exercising the real Server Action against `makeTestDb()` (real migrated schema) with `next/cache`/`next/navigation` mocked at the module boundary, matching the exact pattern in `tests/app/page.test.tsx` |
 | Rollback boundary | Delete `src/app/proyectos/nuevo/`, `src/lib/forms/{result,parse-proyecto}.ts`, `src/components/forms/` and their matching test files under `tests/app/proyectos/nuevo/`, `tests/lib/forms/`, `tests/components/forms/`; no existing route or component imports these new files, so removal is a clean revert with zero blast radius on Phase 1 or the gallery |
 
+## Work Unit Evidence (Work Unit 3 — Proyecto detail/edit/delete + inspiraciones)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run tests/lib/forms/parse-inspiracion.test.ts "tests/app/proyectos/[id]" src/components/gallery/proyecto-card.test.tsx` → 16/16 passed |
+| Runtime harness command/scenario and exact result | N/A — no e2e harness configured (`openspec/config.yaml`); proven by `tests/app/proyectos/[id]/actions.test.ts` exercising the real Server Actions against `makeTestDb()` (real migrated schema, real `ON DELETE CASCADE`) with `next/cache`/`next/navigation` mocked at the module boundary, matching the exact pattern used in Phase 2's `actions.test.ts` |
+| Rollback boundary | Delete `src/app/proyectos/[id]/`, `src/lib/forms/parse-inspiracion.ts`, `src/components/forms/inspiracion-form.tsx`, and `tests/app/proyectos/[id]/`, `tests/lib/forms/parse-inspiracion.test.ts`; revert the `Link`/comparisonMode change in `src/components/gallery/proyecto-card.tsx` and its two added test cases. No existing route depends on the new `[id]` segment; `ProyectoCard`'s only consumer (`GalleryGrid`) already passes `comparisonMode`, so the revert is a clean two-line diff on top of Phase 2's final state |
+
 ## Deviations from Design
 
 Phase 1: None — implementation matches design.md exactly: `NotFoundError` thrown via `.returning().get()` undefined check (updates) and `result.changes === 0` check (deletes); `deleteCategoria`'s FK-restrict `catch` block was left untouched, preserving `CategoriaEnUsoError` precedence as designed.
@@ -143,23 +227,28 @@ Phase 2:
 - **`toActionError`'s SQLITE_CONSTRAINT handling extends design.md's literal contract comment**: design.md's interface comment lists `NotFoundError | CategoriaEnUsoError | SQLITE_CONSTRAINT_UNIQUE; rethrows otherwise`. The "Reject a nonexistent categoria_id" scenario (`project-authoring` spec) requires a caught `{ok:false}` result, but a nonexistent `categoria_id` fails via `SQLITE_CONSTRAINT_FOREIGNKEY`, not `UNIQUE`. `toActionError` was extended to also catch `SQLITE_CONSTRAINT_FOREIGNKEY` (and any other `SQLITE_CONSTRAINT*` code, generically) as a business error, consistent with the broader Requirement "Business Errors Never Reach the Error Overlay" ("any repository error"). Unknown non-constraint errors still rethrow, preserving the "genuine bugs still reach the overlay" rationale.
 - **Form field names use `snake_case`** (`titulo`, `categoria_id`, `tiempo_estimado_h`, ...) matching the DB column names and the literal field names used in the `project-authoring` spec scenarios, while the parsed/repository-facing value uses the existing `camelCase` `NuevoProyecto` shape. This is a convention choice, not a deviation from any stated design decision.
 
+Phase 3:
+- **`design.md`'s "Card → detail link" decision was overridden by the literal `project-gallery` spec scenario** — see the dedicated "Design/Spec Discrepancy Resolution (3.5)" section above for the full reasoning. Summary: design.md argued no suppression logic was needed because the title-link and `SelectionCheckbox` are disjoint click targets; the spec's Requirement unconditionally states navigation MUST be suppressed while comparison mode is active, and its scenario ("the user activates a card ... participates in comparison selection instead of navigating") does not scope "activates a card" to only the checkbox. The RED test was written against the literal spec text, it failed against the design's disjoint-target implementation (no implementation existed for either mode), and the GREEN implementation renders the title as plain text — not a `<Link>` — whenever `comparisonMode` is `true`.
+- **`editarProyectoAction`/`agregarInspiracionAction` take `proyectoId` as their first parameter** (`.bind(null, proyectoId)` at the call site in `page.tsx`), matching design.md's interface comment only implicitly — design.md's `Action<T>` type signature (`(prev, formData) => Promise<ActionResult<T>>`) doesn't show how a per-row id reaches a `useActionState`-bound action; this batch resolves it the same way React's own docs recommend (`action.bind(null, id)`), consistent with `ConfirmSubmitButton`'s existing reusability goal noted in Phase 2's apply-progress.
+- **`eliminarProyectoAction`/`eliminarInspiracionAction` take no `formData` parameter** (only the row id) since neither the "delete proyecto" nor "delete inspiracion" scenario reads any form field — they're single-button forms whose only purpose is the `ConfirmSubmitButton` gate and the POST itself. `page.tsx` wraps each in a tiny local `"use server"` function that discards the framework-supplied `FormData` so the wrapper's return type satisfies React's `(formData) => void | Promise<void>` requirement for a plain `<form action>` prop (confirmed necessary by a `tsc` type error during `npm run build`, not a design assumption).
+
 ## Issues Found
 
 None.
 
 ## Remaining Tasks
 
-- [ ] Phase 3 (PR 3 — proyecto detail/edit/delete + inspiraciones): tasks 3.1–3.6
 - [ ] Phase 4 (PR 4 — taxonomy screens + gallery entry point): tasks 4.1–4.8
 
 ## Workload / PR Boundary
 
 - Mode: chained PR slice (`feature-branch-chain`, `auto-chain` delivery strategy)
 - Work unit 1 (done): Repository layer (PR 1, base: `feature/gestion-proyectos-crud`)
-- Work unit 2 (done, this batch): Proyecto creation (PR 2, base: `pr1-repo-layer`) — `/proyectos/nuevo`, `parse-proyecto`, shared form components
-- Boundary: starts at `pr1-repo-layer`'s final state; ends with all Phase 2 tasks complete, full suite green (156/156), build green
-- Estimated review budget impact: new-file-only diff (no modifications to Phase 1 files) — 8 new `src/` files (~430 lines) + 7 new test files (~430 lines); comfortably under the 400-authored-line-per-PR guidance when counted as its own PR 2 diff, well within the session's 800-line budget regardless
+- Work unit 2 (done): Proyecto creation (PR 2, base: `pr1-repo-layer`) — `/proyectos/nuevo`, `parse-proyecto`, shared form components
+- Work unit 3 (done, this batch): Proyecto detail/edit/delete + inspiraciones (PR 3, base: `pr2-proyecto-create`) — `/proyectos/[id]`, `parse-inspiracion`, gallery card detail link
+- Boundary: starts at `pr2-proyecto-create`'s final state; ends with all Phase 3 tasks complete, full suite green (172/172), build green
+- Estimated review budget impact: 5 new `src/` files (~330 lines: `parse-inspiracion.ts`, `actions.ts`, `page.tsx`, `inspiracion-form.tsx`) + 1 modified `src/` file (~10-line diff: `proyecto-card.tsx`) + 2 new/modified test files (~230 lines); comfortably under the 400-authored-line-per-PR guidance when counted as its own PR 3 diff, well within the session's 800-line budget regardless
 
 ## Status
 
-19/25 tasks complete (0.1–0.3, 1.1–1.9, 2.1–2.7 of the full 4-phase task list). Ready for next batch (Phase 3, PR 3 — proyecto detail/edit/delete + inspiraciones) or for `sdd-verify` to validate the PR 1 + PR 2 slices before Phase 3 begins.
+25/33 tasks complete (0.1–0.3, 1.1–1.9, 2.1–2.7, 3.1–3.6 of the full 4-phase task list). Ready for next batch (Phase 4, PR 4 — taxonomy screens + gallery entry point) or for `sdd-verify` to validate the PR 1 + PR 2 + PR 3 slices before Phase 4 begins.
