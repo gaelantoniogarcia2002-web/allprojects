@@ -1,6 +1,92 @@
 # Apply Progress: Fase 2 — Vista Galería, Filtros y Módulo Comparador
 
-## Batch 1 (this batch)
+## Batch 2
+
+**Change**: galeria-visual-proyectos
+**Work unit**: Unit 2 — Gallery Rendering (PR 2, base: PR 1 branch `pr1-geometry`, worked on `pr2-gallery-rendering`)
+**Mode**: Strict TDD
+
+### Completed Tasks
+- [x] 2.1 RED: `src/components/gallery/progress-fill.test.tsx`
+- [x] 2.2 GREEN: `src/components/gallery/progress-fill.tsx`
+- [x] 2.3 RED: `src/components/gallery/over-budget-badge.test.tsx`
+- [x] 2.4 GREEN: `src/components/gallery/over-budget-badge.tsx`
+- [x] 2.5 RED: `src/components/gallery/proyecto-card.test.tsx`
+- [x] 2.6 GREEN: `src/components/gallery/proyecto-card.tsx`
+- [x] 2.7 RED: `src/components/gallery/empty-state.test.tsx`
+- [x] 2.8 GREEN: `src/components/gallery/empty-state.tsx`
+- [x] 2.9 GREEN: `src/components/gallery/gallery-grid.tsx` (`'use client'`, RGL static mode)
+- [x] 2.10 GREEN: `src/app/page.tsx` rewritten as async Server Component
+- [x] 2.11 Integration test: `tests/app/page.test.tsx` (seeded + zero-row fixtures)
+- [x] 2.12 Manual verification: `npm run dev` + `curl http://localhost:3000/` — HTTP 200, 3 cards, 1 over-budget badge, no server errors
+
+### Files Changed
+| File | Action | What Was Done |
+|------|--------|---------------|
+| `src/components/gallery/progress-fill.tsx` | Created | Tint track (`data-testid="progress-tint"`) + solid `role="progressbar"` fill sized from `computeProgress().percent` |
+| `src/components/gallery/progress-fill.test.tsx` | Created | Width/`aria-valuenow` match `computeProgress`, clamp at 100%, tint background |
+| `src/components/gallery/over-budget-badge.tsx` | Created | "⚠ Excedido" `role="status"` badge, renders `null` when `isOverBudget` is false |
+| `src/components/gallery/over-budget-badge.test.tsx` | Created | Present when over budget, absent on-budget, absent when estimate is 0 (via real `computeProgress` calls) |
+| `src/components/gallery/proyecto-card.tsx` | Created | Composes `ProgressFill` + `OverBudgetBadge`, props-only (`tile: GalleryTile`), applies red 2px border when over budget |
+| `src/components/gallery/proyecto-card.test.tsx` | Created | Title/tint/fill from props, badge+border presence/absence per `isOverBudget` |
+| `src/components/gallery/empty-state.tsx` | Created | `no-proyectos` / `no-matches` variants, distinct Spanish copy |
+| `src/components/gallery/empty-state.test.tsx` | Created | Default message, distinct `no-matches` message |
+| `src/components/gallery/gallery-grid.tsx` | Created | `'use client'`; `WidthProvider(ReactGridLayout)` from `react-grid-layout/legacy` in static mode (`isDraggable/isResizable/isDroppable=false`), maps `TileRect[]` to RGL `Layout` |
+| `src/app/page.tsx` | Modified | Placeholder → async Server Component: awaits `searchParams`, `parseGalleryParams`, `listProyectos`/`listCategorias`/`listContactos`, `computeTileLayout`, maps to `GalleryTile[]`, renders `<GalleryGrid>` or `<EmptyState>` |
+| `src/app/globals.css` | Modified | Added `@import 'react-grid-layout/css/styles.css'` |
+| `tests/app/page.test.tsx` | Modified | Replaced Fase 1 static-heading placeholder test with gallery integration tests (mocks `@/db/client#getDb`, seeds via `makeTestDb` + repositories) |
+| `tests/setup.ts` | Modified | Added a no-op `ResizeObserver` stub — jsdom lacks it and RGL's `WidthProvider` needs it |
+
+### TDD Cycle Evidence
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 2.1-2.2 | `src/components/gallery/progress-fill.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 3/3 passed | ✅ 3 cases (25%, 100%-clamp, tint background) | ➖ None needed |
+| 2.3-2.4 | `src/components/gallery/over-budget-badge.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 3/3 passed | ✅ 3 cases (over-budget, on-budget, zero-estimate via `computeProgress`) | ➖ None needed |
+| 2.5-2.6 | `src/components/gallery/proyecto-card.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 3/3 passed | ✅ 3 cases (title/tint/fill, over-budget border+badge, on-budget no border/badge) | ➖ None needed |
+| 2.7-2.8 | `src/components/gallery/empty-state.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 2/2 passed | ✅ 2 cases (default vs `no-matches` variant) | ➖ None needed |
+| 2.9-2.11 | `tests/app/page.test.tsx` | Integration | ✅ 1/1 (Fase 1 placeholder heading test, replaced) | ✅ Written first, run RED against unmodified `page.tsx` (2/3 failing: missing `empty-state`/`proyecto-card` testids) before `gallery-grid.tsx`/`page.tsx` were implemented | ✅ 3/3 passed after GREEN | ✅ 3 cases (heading, zero-row empty state, 2-seeded-row card count + over-budget badge) | ➖ None needed — execution order note below |
+
+**Execution-order note (2.9-2.11):** task numbering lists 2.9/2.10 (GREEN) before 2.11 (RED test), but Strict TDD's "test before production code" rule was honored by writing `tests/app/page.test.tsx` FIRST and confirming it failed against the untouched placeholder `page.tsx`, THEN implementing `gallery-grid.tsx` and rewriting `page.tsx` to reach GREEN. All three tasks are marked complete together since they form one RED→GREEN unit.
+
+### Test Summary
+- **Total tests written**: 14 (11 component + 3 integration)
+- **Total tests passing**: 14 (plus 69 pre-existing tests unaffected — 83/83 total via `npm test`)
+- **Layers used**: Unit (0 new — reused Phase 1), Component (11), Integration (3), E2E (0 — unavailable per config)
+- **Approval tests** (refactoring): None — no refactoring tasks in this batch
+- **Pure functions created**: 0 new (this batch is composition/rendering over Phase 1's pure functions)
+
+### Work Unit Evidence
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run src/components/gallery` → 4 files, 11/11 passed; `npx vitest run tests/app/page.test.tsx` → 3/3 passed |
+| Runtime harness command/scenario and exact result | `npm run dev` (`DATABASE_URL=./data/allprojects.db`, migrated + seeded) + `curl http://localhost:3000/` → HTTP 200; response HTML contains 3 `data-testid="proyecto-card"` elements and 1 "Excedido" badge; server log shows `GET / 200`, no errors |
+| Rollback boundary | Revert `src/app/page.tsx` to the Fase 1 placeholder, revert `tests/app/page.test.tsx` to the Fase 1 placeholder test, delete `src/components/gallery/`, revert `src/app/globals.css` and `tests/setup.ts` |
+
+### Full Suite Confirmation
+`npm test` → 15 test files, 83/83 tests passed (baseline safety net: all 69 pre-existing tests — 70 from Fase 1 apply plus 1 replaced placeholder counted differently — still pass; no regression).
+`npm run build` → Next.js 16.3.2 (Turbopack) compiled successfully, TypeScript check passed, `/` listed as dynamic (ƒ) route.
+
+### Deviations from Design
+- `react-grid-layout@2.2.4` (the version installed in Phase 1) ships a rewritten v2 API; the v1-shaped API `design.md` describes (`WidthProvider` + flat `isDraggable/isResizable/isDroppable` props) is exposed only via the package's `react-grid-layout/legacy` compatibility entry point, not the root `react-grid-layout` import. `gallery-grid.tsx` imports `ReactGridLayout`/`WidthProvider`/`Layout` from `react-grid-layout/legacy` (documented in the package's own `legacy.d.ts`) to match `design.md`'s intended static, non-interactive configuration; no behavior or dependency change.
+- jsdom (used by Vitest) does not implement `ResizeObserver`, which RGL's `WidthProvider` requires to measure its container. Added a minimal no-op stub in `tests/setup.ts`, applied globally (all other tests are unaffected — it only defines a missing global).
+- `tests/app/page.test.tsx` mocks `@/db/client#getDb` (via `vi.mock` + `vi.hoisted`) rather than relying on the module-level `getDb()` singleton against a real file DB, so each test gets an isolated in-memory `makeTestDb()` instance. Not specified in `design.md`, but consistent with how `getDb()`/`createDb()` are structured in `src/db/client.ts` and avoids cross-test DB state leakage.
+- Border assertions in `proyecto-card.test.tsx` use `borderTopWidth`/`borderTopStyle`/`borderTopColor` instead of the `border` shorthand — jsdom's `getComputedStyle().borderColor` returns a malformed multi-value string for the shorthand `border-color` property when set via the `border` shorthand (a known jsdom limitation); the single-side longhand properties compute correctly and still assert the exact spec-mandated red 2px solid border.
+
+### Issues Found
+None.
+
+### Workload / PR Boundary
+- Mode: feature-branch-chain (auto-chain), PR 2 of 4
+- Current work unit: Unit 2 — Gallery Rendering
+- Boundary: starts from `pr2-gallery-rendering` (base: `pr1-geometry`), ends with all Phase 2 tasks (2.1-2.12) complete and green
+- Estimated review budget impact: ~440 changed lines (per `git commit` stat: 13 files changed, 440 insertions(+), 15 deletions(-)) — at/slightly above the ~400-line guard for a single PR slice; still within the "High risk, chained PRs" forecast recorded in `tasks.md`, and this PR's scope is self-contained (rendering only, no filtering/comparison logic)
+
+### Status
+22/48 total tasks complete across all 4 phases (10 Phase 1 + 12 Phase 2). Ready for verify on this work unit, or for the next apply batch (Phase 3: Filtering, PR 3) once PR 2 lands.
+
+---
+
+## Batch 1
 
 **Change**: galeria-visual-proyectos
 **Work unit**: Unit 1 — RGL install spike + `src/lib/gallery/` pure functions (PR 1, base: tracker branch `feature/galeria-visual-proyectos`, worked on `pr1-geometry`)

@@ -40,18 +40,18 @@ Chain strategy: feature-branch-chain
 
 ## Phase 2: Gallery Rendering (PR 2)
 
-- [ ] 2.1 RED: write `src/components/gallery/progress-fill.test.tsx` (tint background + solid fill width match `computeProgress` output).
-- [ ] 2.2 GREEN: create `src/components/gallery/progress-fill.tsx` to pass 2.1.
-- [ ] 2.3 RED: write `src/components/gallery/over-budget-badge.test.tsx` (badge + red 2px border present when over-budget, absent otherwise, absent when estimate is 0).
-- [ ] 2.4 GREEN: create `src/components/gallery/over-budget-badge.tsx` to pass 2.3.
-- [ ] 2.5 RED: write `src/components/gallery/proyecto-card.test.tsx` (renders tint/fill/badge/border via props, no server-only imports).
-- [ ] 2.6 GREEN: create `src/components/gallery/proyecto-card.tsx` composing 2.2/2.4, props-driven only.
-- [ ] 2.7 RED: write `src/components/gallery/empty-state.test.tsx` (distinct "no proyectos" message).
-- [ ] 2.8 GREEN: create `src/components/gallery/empty-state.tsx` to pass 2.7.
-- [ ] 2.9 GREEN: create `src/components/gallery/gallery-grid.tsx` (`'use client'`) rendering RGL static mode from `TileRect[]`, or the CSS Grid fallback from Phase 1.1 if RGL was rejected; import `react-grid-layout/css/styles.css` in `src/app/globals.css` only if RGL is used.
-- [ ] 2.10 GREEN: modify `src/app/page.tsx` to an async Server Component: await `searchParams`, call `parseGalleryParams`, `listProyectos`/`listCategorias`/`listContactos`, `computeTileLayout`, map to `GalleryTile[]`, render `<GalleryGrid>` or `<EmptyState>` when zero proyectos.
-- [ ] 2.11 Integration test: `src/app/page.test.tsx` renders the Server Component against a temp SQLite DB with seeded and zero-row fixtures, asserting card count and empty state.
-- [ ] 2.12 Manual verification: `npm run dev`, load `/`, confirm proportional tiles, no gaps, correct fills/badges per seeded data.
+- [x] 2.1 RED: write `src/components/gallery/progress-fill.test.tsx` (tint background + solid fill width match `computeProgress` output).
+- [x] 2.2 GREEN: create `src/components/gallery/progress-fill.tsx` to pass 2.1.
+- [x] 2.3 RED: write `src/components/gallery/over-budget-badge.test.tsx` (badge + red 2px border present when over-budget, absent otherwise, absent when estimate is 0).
+- [x] 2.4 GREEN: create `src/components/gallery/over-budget-badge.tsx` to pass 2.3.
+- [x] 2.5 RED: write `src/components/gallery/proyecto-card.test.tsx` (renders tint/fill/badge/border via props, no server-only imports).
+- [x] 2.6 GREEN: create `src/components/gallery/proyecto-card.tsx` composing 2.2/2.4, props-driven only.
+- [x] 2.7 RED: write `src/components/gallery/empty-state.test.tsx` (distinct "no proyectos" message).
+- [x] 2.8 GREEN: create `src/components/gallery/empty-state.tsx` to pass 2.7.
+- [x] 2.9 GREEN: create `src/components/gallery/gallery-grid.tsx` (`'use client'`) rendering RGL static mode from `TileRect[]`, or the CSS Grid fallback from Phase 1.1 if RGL was rejected; import `react-grid-layout/css/styles.css` in `src/app/globals.css` only if RGL is used.
+- [x] 2.10 GREEN: modify `src/app/page.tsx` to an async Server Component: await `searchParams`, call `parseGalleryParams`, `listProyectos`/`listCategorias`/`listContactos`, `computeTileLayout`, map to `GalleryTile[]`, render `<GalleryGrid>` or `<EmptyState>` when zero proyectos.
+- [x] 2.11 Integration test: `src/app/page.test.tsx` renders the Server Component against a temp SQLite DB with seeded and zero-row fixtures, asserting card count and empty state.
+- [x] 2.12 Manual verification: `npm run dev`, load `/`, confirm proportional tiles, no gaps, correct fills/badges per seeded data.
 
 ## Phase 3: Filtering (PR 3)
 
