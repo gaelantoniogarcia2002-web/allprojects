@@ -1,5 +1,73 @@
 # Apply Progress: Fase 2 — Vista Galería, Filtros y Módulo Comparador
 
+## Batch 3
+
+**Change**: galeria-visual-proyectos
+**Work unit**: Unit 3 — Filtering (PR 3, base: PR 2 branch `pr2-gallery-rendering`, worked on `pr3-filtering`)
+**Mode**: Strict TDD
+
+### Completed Tasks
+- [x] 3.1 RED: `src/components/filters/filter-bar.test.tsx`
+- [x] 3.2 GREEN: `src/components/filters/filter-bar.tsx`
+- [x] 3.3 GREEN: wired `<FilterBar>` into `src/app/page.tsx`
+- [x] 3.4 RED: `no-matches` empty-state coverage — already present from Batch 2 (`src/components/gallery/empty-state.test.tsx`, tasks 2.7-2.8); reused as-is, no new test needed
+- [x] 3.5 GREEN: `page.tsx` now selects `no-matches` vs `no-proyectos` based on whether an unfiltered query still returns rows
+- [x] 3.6 Integration test: extended `tests/app/page.test.tsx` with `?categoria=`, `?categoria=&contacto=`, no-match, and reload-reproducibility fixtures
+- [x] 3.7 Manual verification: `npm run dev` + `curl` with `?categoria=1`, `?categoria=1&contacto=1`, `?categoria=999`
+
+### Files Changed
+| File | Action | What Was Done |
+|------|--------|---------------|
+| `src/components/filters/filter-bar.tsx` | Created | `'use client'`; reads current filters via `useSearchParams()` + `parseGalleryParams`, pushes `buildGalleryHref(params, patch)` via `useRouter().push(href, { scroll: false })` on categoría/contacto `<select>` change |
+| `src/components/filters/filter-bar.test.tsx` | Created | Mocks `next/navigation` (`useRouter`, `useSearchParams`); asserts categoría-only push, contacto-only push, clearing a filter drops its param, combined AND intersection preserves the other active filter, and selects reflect the current URL |
+| `src/app/page.tsx` | Modified | Imports and renders `<FilterBar categorias={categorias} contactos={contactos} />` in both the populated and empty-state branches; computes `filtersActive` from `parseGalleryParams`; when the filtered result is empty, re-queries `listProyectos(db)` unfiltered to distinguish `no-matches` (rows exist elsewhere) from `no-proyectos` (database is genuinely empty) |
+| `tests/app/page.test.tsx` | Modified | Added `vi.mock("next/navigation", ...)` (hoisted `mockPush`/`mockUseSearchParams`) so `FilterBar` renders inside the Server Component tree under test; `renderHome()` now mirrors the `searchParams` fixture into the mocked `useSearchParams()` so `FilterBar`'s "current" state matches the page's own parse, exercising real reload-reproducibility; added 4 new tests: `?categoria=` narrowing, `?categoria=&contacto=` AND intersection, no-matches empty state, and same-URL re-render producing identical card content |
+
+### TDD Cycle Evidence
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 3.1-3.2 | `src/components/filters/filter-bar.test.tsx` | Component | N/A (new) | ✅ Written (import-resolution failure: `Failed to resolve import "./filter-bar"`) | ✅ 5/5 passed | ✅ 5 cases (categoría-only, contacto-only, clear-categoria, categoria+existing-contacto AND, reflects-current-URL) | ➖ None needed |
+| 3.3, 3.5 | `tests/app/page.test.tsx` | Integration | ✅ 7 pre-existing page tests (3 from Batch 2 + this batch's own additions run together) | ✅ Extended tests written first; ran against pre-wiring `page.tsx`/mocked `next/navigation` and failed with `invariant expected app router to be mounted` (no `next/navigation` mock yet) before the mock + `<FilterBar>` wiring landed | ✅ 7/7 passed after GREEN | ✅ covered via 3.6's new integration cases | ➖ None needed |
+| 3.4 | `src/components/gallery/empty-state.test.tsx` | Component | ✅ 2/2 (unchanged from Batch 2) | N/A — `no-matches` variant + test already existed from Batch 2 (2.7-2.8); no new RED cycle run | N/A | N/A | ➖ Reused as-is |
+| 3.6 | `tests/app/page.test.tsx` | Integration | ✅ 3 pre-existing (Batch 2) | ✅ Written first; new fixtures failed pre-wiring for the same `next/navigation` mounting reason above | ✅ 4/4 new cases passed after GREEN | ✅ 4 cases (categoria-narrow, categoria+contacto AND, no-matches, reload-reproducibility) | ➖ None needed |
+
+### Test Summary
+- **Total tests written this batch**: 9 (5 component + 4 integration)
+- **Total tests passing**: 92/92 (`npm test`, full suite — up from 83 in Batch 2)
+- **Layers used**: Unit (0 new — reused Phase 1), Component (5), Integration (4), E2E (0 — unavailable per config)
+- **Approval tests** (refactoring): None — no refactoring tasks in this batch
+- **Pure functions created**: 0 new — reused `buildGalleryHref`/`parseGalleryParams` from Phase 1
+
+### Work Unit Evidence
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run src/components/filters` → 1 file, 5/5 passed; `npx vitest run tests/app/page.test.tsx` → 7/7 passed |
+| Runtime harness command/scenario and exact result | `npm run dev` (`DATABASE_URL=./data/allprojects.db`) + `curl`: unfiltered `/` → 3 `data-testid="proyecto-card"`; `/?categoria=1` → 1 card (option `id=1` "Robótica Hobbie" marked `selected`); `/?categoria=1&contacto=1` → 1 card (AND intersection); `/?categoria=999` (no proyecto in that categoria) → `data-testid="empty-state"` with text "Ningún proyecto coincide con los filtros seleccionados."; all requests logged `GET ... 200` in the dev server log, no errors |
+| Rollback boundary | Delete `src/components/filters/`; revert `src/app/page.tsx` to the Batch 2 version (drop `FilterBar` import/usage and the `filtersActive`/`hasAnyProyectos` empty-state branching, back to unconditional `variant="no-proyectos"`); revert `tests/app/page.test.tsx` to the Batch 2 version (drop the `next/navigation` mock and the 4 new filter tests) |
+
+### Full Suite Confirmation
+`npm test` → 16 test files, 92/92 tests passed (baseline safety net: all 83 Batch-2 tests still pass; no regression).
+`npm run build` → Next.js 16.3.2 (Turbopack) compiled successfully, TypeScript check passed, `/` listed as dynamic (ƒ) route.
+
+### Deviations from Design
+- `FilterBar` reads its "current" filter state internally via `useSearchParams()` + `parseGalleryParams` rather than receiving a `params: GalleryParams` prop from the server. `design.md`'s Data Flow diagram lists `<FilterBar/>` as a client component that "only push[es] new search params" without specifying how it reads the current ones; reading `useSearchParams()` directly (as task 3.2 literally specifies: "using `useRouter`/`useSearchParams`") keeps `FilterBar` self-contained (only `categorias`/`contactos` as props) and avoids re-deriving `GalleryParams` twice (once in `page.tsx`, once passed down); behaviorally identical since both read the same URL.
+- The `no-matches` vs `no-proyectos` empty-state distinction (task 3.5) required one extra unfiltered `listProyectos(db)` call when the filtered result is empty and a filter is active, to distinguish "filters produced zero rows" from "the database itself is empty while filters happen to be set." Not explicitly specified in `design.md`, but required by `project-filtering` spec's "No-Match Filter Empty State" requirement, which is scoped to "active filters produce zero matching proyectos" (implying rows exist elsewhere) as distinct from the Fase-2 "database has zero rows" case.
+- Task 3.4 ("RED: extend `empty-state.test.tsx` ... for zero-results-after-filter") was already satisfied by Batch 2's tasks 2.7-2.8, which created both the `no-matches` variant and its test up front (anticipating Fase 3). No new RED/GREEN cycle was run for the component itself in this batch; the remaining Fase-3-specific work was exercised at the integration level (`tests/app/page.test.tsx`, task 3.6).
+
+### Issues Found
+None.
+
+### Workload / PR Boundary
+- Mode: feature-branch-chain (auto-chain), PR 3 of 4
+- Current work unit: Unit 3 — Filtering
+- Boundary: starts from `pr3-filtering` (base: `pr2-gallery-rendering`), ends with all Phase 3 tasks (3.1-3.7) complete and green
+- Estimated review budget impact: small — 2 new files (~90 lines) + 2 modified files (~60 changed lines); well within the 400-line guard for a single PR slice
+
+### Status
+29/48 total tasks complete across all 4 phases (10 Phase 1 + 12 Phase 2 + 7 Phase 3). Ready for verify on this work unit, or for the next apply batch (Phase 4: Comparison Module, PR 4) once PR 3 lands.
+
+---
+
 ## Batch 2
 
 **Change**: galeria-visual-proyectos

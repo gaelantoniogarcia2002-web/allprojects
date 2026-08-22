@@ -55,13 +55,13 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Filtering (PR 3)
 
-- [ ] 3.1 RED: write `src/components/filters/filter-bar.test.tsx` covering categoría-only select, contacto-only select, clearing a filter, and combined AND intersection reflected via `buildGalleryHref` calls.
-- [ ] 3.2 GREEN: create `src/components/filters/filter-bar.tsx` (`'use client'`) using `useRouter`/`useSearchParams`, calling `router.push(buildGalleryHref(...), { scroll: false })`.
-- [ ] 3.3 GREEN: wire `<FilterBar>` into `src/app/page.tsx`, passing `categoriaId`/`contactoId` from `parseGalleryParams` into `listProyectos`.
-- [ ] 3.4 RED: extend `src/components/gallery/empty-state.test.tsx` (or add `no-matches` variant) for zero-results-after-filter, distinct from the no-proyectos-seeded state.
-- [ ] 3.5 GREEN: render the no-matches empty state in `page.tsx` when filters are active and the filtered list is empty.
-- [ ] 3.6 Integration test: extend `src/app/page.test.tsx` with `?categoria=` and `?categoria=&contacto=` fixtures asserting narrowed results and reload-reproducibility.
-- [ ] 3.7 Manual verification: `npm run dev`, apply/clear filters, confirm URL updates and reload reproduces the same filtered view.
+- [x] 3.1 RED: write `src/components/filters/filter-bar.test.tsx` covering categoría-only select, contacto-only select, clearing a filter, and combined AND intersection reflected via `buildGalleryHref` calls.
+- [x] 3.2 GREEN: create `src/components/filters/filter-bar.tsx` (`'use client'`) using `useRouter`/`useSearchParams`, calling `router.push(buildGalleryHref(...), { scroll: false })`.
+- [x] 3.3 GREEN: wire `<FilterBar>` into `src/app/page.tsx`, passing `categoriaId`/`contactoId` from `parseGalleryParams` into `listProyectos`.
+- [x] 3.4 RED: extend `src/components/gallery/empty-state.test.tsx` (or add `no-matches` variant) for zero-results-after-filter, distinct from the no-proyectos-seeded state.
+- [x] 3.5 GREEN: render the no-matches empty state in `page.tsx` when filters are active and the filtered list is empty.
+- [x] 3.6 Integration test: extend `src/app/page.test.tsx` with `?categoria=` and `?categoria=&contacto=` fixtures asserting narrowed results and reload-reproducibility.
+- [x] 3.7 Manual verification: `npm run dev`, apply/clear filters, confirm URL updates and reload reproduces the same filtered view.
 
 ## Phase 4: Comparison Module (PR 4)
 
