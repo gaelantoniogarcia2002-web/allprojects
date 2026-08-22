@@ -27,16 +27,16 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Foundation — RGL Spike + Pure Geometry Layer (PR 1)
 
-- [ ] 1.1 Install `react-grid-layout` + `@types/react-grid-layout`; run `npm run build` to validate React 19 peer/type compatibility. If it fails without `--legacy-peer-deps`, document the CSS Grid fallback decision in `design.md` Open Questions and proceed with the fallback approach from `Migration / Rollout` for Phase 2.
-- [ ] 1.2 RED: write `src/lib/gallery/tile-geometry.test.ts` covering larger-estimate-yields-larger-tile, no-gaps packing, zero-hours minimum tile, and determinism (stable ordering on ties).
-- [ ] 1.3 GREEN: create `src/lib/gallery/types.ts` (`GalleryTile`, `GalleryParams`, `TileRect`) and `src/lib/gallery/tile-geometry.ts` (`computeTileLayout`, sqrt-area mapping, shelf bin-packing) to pass 1.2.
-- [ ] 1.4 RED: write `src/lib/gallery/progress.test.ts` covering 25% partial fill, 100%-clamp on overrun, and 0%/no-throw on `tiempo_estimado_h = 0`.
-- [ ] 1.5 GREEN: create `src/lib/gallery/progress.ts` (`computeProgress`) to pass 1.4.
-- [ ] 1.6 RED: write `src/lib/gallery/color.test.ts` covering tint (transparent) and solid color output from a hex `categoria.color`.
-- [ ] 1.7 GREEN: create `src/lib/gallery/color.ts` (`toTint`, `toSolid`) to pass 1.6.
-- [ ] 1.8 RED: write `src/lib/gallery/search-params.test.ts` covering parse of `categoria`/`contacto`/`modo`/`seleccion`, invalid/non-numeric params dropped (not thrown), and `buildGalleryHref` round-trip.
-- [ ] 1.9 GREEN: create `src/lib/gallery/search-params.ts` (`parseGalleryParams`, `buildGalleryHref`) to pass 1.8.
-- [ ] 1.10 REFACTOR: dedupe clamp/round helpers across `src/lib/gallery/*`; confirm `npm test -- src/lib/gallery` and `npm run build` stay green.
+- [x] 1.1 Install `react-grid-layout` + `@types/react-grid-layout`; run `npm run build` to validate React 19 peer/type compatibility. If it fails without `--legacy-peer-deps`, document the CSS Grid fallback decision in `design.md` Open Questions and proceed with the fallback approach from `Migration / Rollout` for Phase 2.
+- [x] 1.2 RED: write `src/lib/gallery/tile-geometry.test.ts` covering larger-estimate-yields-larger-tile, no-gaps packing, zero-hours minimum tile, and determinism (stable ordering on ties).
+- [x] 1.3 GREEN: create `src/lib/gallery/types.ts` (`GalleryTile`, `GalleryParams`, `TileRect`) and `src/lib/gallery/tile-geometry.ts` (`computeTileLayout`, sqrt-area mapping, shelf bin-packing) to pass 1.2.
+- [x] 1.4 RED: write `src/lib/gallery/progress.test.ts` covering 25% partial fill, 100%-clamp on overrun, and 0%/no-throw on `tiempo_estimado_h = 0`.
+- [x] 1.5 GREEN: create `src/lib/gallery/progress.ts` (`computeProgress`) to pass 1.4.
+- [x] 1.6 RED: write `src/lib/gallery/color.test.ts` covering tint (transparent) and solid color output from a hex `categoria.color`.
+- [x] 1.7 GREEN: create `src/lib/gallery/color.ts` (`toTint`, `toSolid`) to pass 1.6.
+- [x] 1.8 RED: write `src/lib/gallery/search-params.test.ts` covering parse of `categoria`/`contacto`/`modo`/`seleccion`, invalid/non-numeric params dropped (not thrown), and `buildGalleryHref` round-trip.
+- [x] 1.9 GREEN: create `src/lib/gallery/search-params.ts` (`parseGalleryParams`, `buildGalleryHref`) to pass 1.8.
+- [x] 1.10 REFACTOR: dedupe clamp/round helpers across `src/lib/gallery/*`; confirm `npm test -- src/lib/gallery` and `npm run build` stay green.
 
 ## Phase 2: Gallery Rendering (PR 2)
 
