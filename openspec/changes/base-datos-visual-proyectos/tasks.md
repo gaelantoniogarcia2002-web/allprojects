@@ -38,13 +38,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Schema & Constraints (PR 2)
 
-- [ ] 2.1 `drizzle.config.ts` (sqlite dialect, schema `src/db/schema.ts`, out `drizzle/`)
-- [ ] 2.2 `tests/helpers/test-db.ts` — `makeTestDb()`: `:memory:` + `migrate()`
-- [ ] 2.3 RED: `tests/schema/constraints.test.ts` — estado/frecuencia_avance/tipo_referencia CHECKs, NOT NULL `titulo`, UNIQUE `categorias.nombre`, FK `categoria_id` RESTRICT, cascade proyecto→inspiraciones/proyecto_contactos, contacto delete removes only join rows, `tiempo_estimado_h`/`tiempo_invertido_h` >= 0
-- [ ] 2.4 GREEN: `src/db/schema.ts` — 5 tables per design, enum const arrays, CHECKs, indexes
-- [ ] 2.5 GREEN: `src/db/client.ts` — `createDb()`/`getDb()`, `PRAGMA foreign_keys = ON`
-- [ ] 2.6 `npm run db:generate`; `scripts/migrate.ts` applies `drizzle/` to `DATABASE_URL`
-- [ ] 2.7 Verify all Phase 2 tests pass against the real generated migration
+- [x] 2.1 `drizzle.config.ts` (sqlite dialect, schema `src/db/schema.ts`, out `drizzle/`)
+- [x] 2.2 `tests/helpers/test-db.ts` — `makeTestDb()`: `:memory:` + `migrate()`
+- [x] 2.3 RED: `tests/schema/constraints.test.ts` — estado/frecuencia_avance/tipo_referencia CHECKs, NOT NULL `titulo`, UNIQUE `categorias.nombre`, FK `categoria_id` RESTRICT, cascade proyecto→inspiraciones/proyecto_contactos, contacto delete removes only join rows, `tiempo_estimado_h`/`tiempo_invertido_h` >= 0
+- [x] 2.4 GREEN: `src/db/schema.ts` — 5 tables per design, enum const arrays, CHECKs, indexes
+- [x] 2.5 GREEN: `src/db/client.ts` — `createDb()`/`getDb()`, `PRAGMA foreign_keys = ON`
+- [x] 2.6 `npm run db:generate`; `scripts/migrate.ts` applies `drizzle/` to `DATABASE_URL`
+- [x] 2.7 Verify all Phase 2 tests pass against the real generated migration
 
 ## Phase 3: Repository Layer (PR 3)
 
