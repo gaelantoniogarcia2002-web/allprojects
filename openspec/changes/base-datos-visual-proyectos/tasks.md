@@ -62,7 +62,7 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Seed Script & Verification (PR 4)
 
-- [ ] 4.1 RED: `tests/seed.test.ts` — seed on temp-file DB yields 2-3 proyectos with categoria+contacto+inspiracion, >=2 distinct `estado`, re-run without `--reset` fails on UNIQUE(nombre) not silent dup
-- [ ] 4.2 GREEN: `scripts/seed.ts` — single transaction, `--reset` flag, 3 categorias/contactos/proyectos (one over-budget, one `monto_pago: null`) inserted via repositories, 1-3 inspiraciones/proyecto spanning `tipo_referencia`
-- [ ] 4.3 Update `openspec/config.yaml` `rules.apply.test_command` / `rules.verify.test_command` with the real `npm test` invocation
-- [ ] 4.4 Verify proposal success criteria: `npm run dev`, `npm test`, `npm run db:seed` idempotent, a repository query returns a seeded project with joined categoria/contactos/inspiraciones
+- [x] 4.1 RED: `tests/seed.test.ts` — seed on temp-file DB yields 2-3 proyectos with categoria+contacto+inspiracion, >=2 distinct `estado`, re-run without `--reset` fails on UNIQUE(nombre) not silent dup
+- [x] 4.2 GREEN: `scripts/seed.ts` — single transaction, `--reset` flag, 3 categorias/contactos/proyectos (one over-budget, one `monto_pago: null`) inserted via repositories, 1-3 inspiraciones/proyecto spanning `tipo_referencia`
+- [x] 4.3 Update `openspec/config.yaml` `rules.apply.test_command` / `rules.verify.test_command` with the real `npm test` invocation
+- [x] 4.4 Verify proposal success criteria: `npm run dev`, `npm test`, `npm run db:seed` idempotent, a repository query returns a seeded project with joined categoria/contactos/inspiraciones

@@ -11,21 +11,21 @@ context: |
 strict_tdd: true
 
 testing:
-  status: not_detected
-  reason: "No test runner detected — project has no package manager or source files yet."
+  status: detected
+  reason: "Vitest test runner scaffolded in PR 1 (base-datos-visual-proyectos); 50 tests across component/schema/repository/seed layers passing as of PR 4."
   strict_tdd_source: "agent marker (CLAUDE.md: 'Strict TDD Mode: enabled')"
   test_layers:
-    unit: unavailable
-    integration: unavailable
+    unit: available
+    integration: available
     e2e: unavailable
   coverage:
     available: false
     command: ""
   quality_tools:
     linter: unavailable
-    type_checker: unavailable
+    type_checker: available
     formatter: unavailable
-  next_step: "Resolve strict_tdd test runner and layers once a stack is chosen (likely during sdd-propose/sdd-design for the first change)."
+  next_step: "None — test runner and layers resolved for the data layer. Re-evaluate e2e/linter/formatter when Fase 2 (UI) work begins."
 
 rules:
   proposal:
@@ -48,10 +48,10 @@ rules:
       - Follow existing code patterns once established
       - Once a test runner exists, follow strict TDD (RED-GREEN-REFACTOR) per project marker
     tdd: true
-    test_command: ""
+    test_command: "npm test"
   verify:
-    test_command: ""
-    build_command: ""
+    test_command: "npm test"
+    build_command: "npm run build"
     coverage_threshold: 0
   archive:
     - Warn before merging destructive deltas
