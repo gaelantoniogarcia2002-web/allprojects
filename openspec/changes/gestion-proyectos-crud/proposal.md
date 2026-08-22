@@ -62,8 +62,8 @@ All deliverables are additive and route-scoped. Revert per slice: delete the new
 
 ## Success Criteria
 
-- [ ] A proyecto can be created, edited and deleted end-to-end from the UI, with contactos and inspiraciones attached.
-- [ ] Categorias and contactos can be listed, edited and deleted from their own screens.
-- [ ] Deleting an in-use categoria shows `CategoriaEnUsoError`'s message inline and the row survives.
-- [ ] Acting on a missing id yields a handled not-found message, never an error overlay.
-- [ ] `npm test` and `npm run build` pass; gallery, filtering and comparison behavior are unchanged.
+- [x] A proyecto can be created, edited and deleted end-to-end from the UI, with contactos and inspiraciones attached.
+- [x] Categorias and contactos can be listed, edited and deleted from their own screens.
+- [x] Deleting an in-use categoria shows `CategoriaEnUsoError`'s message inline and the row survives.
+- [x] Acting on a missing id yields a handled not-found message, never an error overlay.
+- [x] `npm test` and `npm run build` pass; gallery, filtering and comparison behavior are unchanged.

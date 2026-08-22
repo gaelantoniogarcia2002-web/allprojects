@@ -67,11 +67,11 @@ Threat matrix: N/A (design.md confirms no shell/subprocess/VCS boundary in this 
 
 ## Phase 4 (PR 4 — taxonomy screens + gallery entry point)
 
-- [ ] 4.1 RED `tests/lib/forms/parse-taxonomia.test.ts` — categoria(nombre,color) + contacto(nombre,url) branches.
-- [ ] 4.2 GREEN `src/lib/forms/parse-taxonomia.ts`.
-- [ ] 4.3 RED `tests/app/categorias/actions.test.ts` — edit, delete blocked inline (`CategoriaEnUsoError`), delete allowed when unused, `NotFoundError`.
-- [ ] 4.4 GREEN `src/app/categorias/{page.tsx,actions.ts}`.
-- [ ] 4.5 RED `tests/app/contactos/actions.test.ts` — edit, delete always succeeds, `NotFoundError`.
-- [ ] 4.6 GREEN `src/app/contactos/{page.tsx,actions.ts}`.
-- [ ] 4.7 `src/app/page.tsx` — add "Nuevo proyecto", `/categorias`, `/contactos` entry links; RTL test.
-- [ ] 4.8 `npm test` + `npm run build`; confirm gallery/filtering/comparison behavior unchanged.
+- [x] 4.1 RED `tests/lib/forms/parse-taxonomia.test.ts` — categoria(nombre,color) + contacto(nombre,url) branches.
+- [x] 4.2 GREEN `src/lib/forms/parse-taxonomia.ts`.
+- [x] 4.3 RED `tests/app/categorias/actions.test.ts` — edit, delete blocked inline (`CategoriaEnUsoError`), delete allowed when unused, `NotFoundError`.
+- [x] 4.4 GREEN `src/app/categorias/{page.tsx,actions.ts}`.
+- [x] 4.5 RED `tests/app/contactos/actions.test.ts` — edit, delete always succeeds, `NotFoundError`.
+- [x] 4.6 GREEN `src/app/contactos/{page.tsx,actions.ts}`.
+- [x] 4.7 `src/app/page.tsx` — add "Nuevo proyecto", `/categorias`, `/contactos` entry links; RTL test.
+- [x] 4.8 `npm test` + `npm run build`; confirm gallery/filtering/comparison behavior unchanged.
