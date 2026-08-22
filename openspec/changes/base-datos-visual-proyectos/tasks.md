@@ -27,14 +27,14 @@ Chain strategy: stacked-to-main
 
 ## Phase 1: Bootstrap Scaffold & Test Runner (PR 1)
 
-- [ ] 1.1 Scaffold Next.js App Router + TS: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, Tailwind setup
-- [ ] 1.2 Add `dev`/`build`/`test`/`db:generate`/`db:migrate`/`db:seed` scripts to `package.json`
-- [ ] 1.3 Install deps: `better-sqlite3`, `drizzle-orm`, `drizzle-kit`, `vitest`, `@testing-library/react`, `tsx`
-- [ ] 1.4 Configure `vitest.config.ts` (jsdom) and `tests/setup.ts`
-- [ ] 1.5 Add `.gitignore` (`*.db`, `node_modules`, `data/`)
-- [ ] 1.6 RED: `tests/app/page.test.tsx` — placeholder page renders a heading
-- [ ] 1.7 GREEN: `src/app/layout.tsx`, `page.tsx`, `globals.css` minimal placeholder
-- [ ] 1.8 Confirm `better-sqlite3` native build; fall back to `node:sqlite` behind `createDb()` if it fails
+- [x] 1.1 Scaffold Next.js App Router + TS: `package.json`, `tsconfig.json`, `next.config.ts`, `postcss.config.mjs`, Tailwind setup
+- [x] 1.2 Add `dev`/`build`/`test`/`db:generate`/`db:migrate`/`db:seed` scripts to `package.json`
+- [x] 1.3 Install deps: `better-sqlite3`, `drizzle-orm`, `drizzle-kit`, `vitest`, `@testing-library/react`, `tsx`
+- [x] 1.4 Configure `vitest.config.ts` (jsdom) and `tests/setup.ts`
+- [x] 1.5 Add `.gitignore` (`*.db`, `node_modules`, `data/`)
+- [x] 1.6 RED: `tests/app/page.test.tsx` — placeholder page renders a heading
+- [x] 1.7 GREEN: `src/app/layout.tsx`, `page.tsx`, `globals.css` minimal placeholder
+- [x] 1.8 Confirm `better-sqlite3` native build; fall back to `node:sqlite` behind `createDb()` if it fails
 
 ## Phase 2: Schema & Constraints (PR 2)
 
