@@ -6,9 +6,9 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 ## Delivery
 - Delivery strategy: `auto-chain`
 - Chain strategy: `stacked-to-main`
-- Current batch: Work Unit 3 — Phase 3 (PR 3: Repository Layer)
-- Branch: `pr3-repositories` (branched from `pr2-schema`)
-- Previous batches: Work Unit 1 — Phase 1 (PR 1) — COMPLETE, branch `pr1-scaffold`; Work Unit 2 — Phase 2 (PR 2) — COMPLETE, branch `pr2-schema`
+- Current batch: Work Unit 4 — Phase 4 (PR 4: Seed Script & Verification) — FINAL WORK UNIT, change fully implemented
+- Branch: `pr4-seed` (branched from `pr3-repositories`)
+- Previous batches: Work Unit 1 — Phase 1 (PR 1) — COMPLETE, branch `pr1-scaffold`; Work Unit 2 — Phase 2 (PR 2) — COMPLETE, branch `pr2-schema`; Work Unit 3 — Phase 3 (PR 3) — COMPLETE, branch `pr3-repositories`
 
 ## Completed Tasks
 
@@ -34,6 +34,12 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 - [x] 3.9 RED: `tests/repositories/inspiraciones.test.ts` — create, list by proyecto, delete
 - [x] 3.10 GREEN: `src/db/repositories/inspiraciones.ts`
 - [x] 3.11 `src/db/repositories/index.ts` — barrel export
+
+### Phase 4: Seed Script & Verification (PR 4) — COMPLETE
+- [x] 4.1 RED: `tests/seed.test.ts` — seed on temp-file DB yields 2-3 proyectos with categoria+contacto+inspiraciones linked, >=2 distinct `estado`, re-run without `--reset` fails on `UNIQUE(categorias.nombre)` not silent dup
+- [x] 4.2 GREEN: `scripts/seed.ts` — single `db.transaction`, `--reset` flag (wipes child-first then reseeds), 3 categorias/3 contactos/3 proyectos inserted via the repository layer (one over-budget: `tiempoInvertidoH=55 > tiempoEstimadoH=40`; one with `montoPago: null`), 1-3 inspiraciones per proyecto spanning all 4 `tipo_referencia` values
+- [x] 4.3 Updated `openspec/config.yaml` `rules.apply.test_command`/`rules.verify.test_command`/`build_command` to real `npm test`/`npm run build`; also refreshed the stale `testing:` block (was `status: not_detected` from before any stack existed) to `status: detected`
+- [x] 4.4 Verified all proposal success criteria end-to-end (see Work Unit Evidence below)
 
 ## Files Changed
 
@@ -70,6 +76,9 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 | `tests/repositories/contactos.test.ts` | Created | RED→GREEN: 8 tests — create, list, link, link-twice-idempotent, unlink-never-linked-idempotent, unlink-existing, delete cascades only join rows (other contacto + proyecto untouched), delete-nonexistent returns false |
 | `tests/repositories/proyectos.test.ts` | Created | RED→GREEN: 11 tests — create defaults `tiempoInvertidoH=0` / explicit value, `listProyectos` filters by estado/categoriaId/contactoId/none, `getProyectoConDetalle` nested categoria+contactos+inspiraciones / not-found→null, `updateProyecto` bumps `updatedAt` (1.1s real-clock wait, since `updated_at` default resolution is whole seconds), `deleteProyecto` cascades / not-found returns false |
 | `tests/repositories/inspiraciones.test.ts` | Created | RED→GREEN: 5 tests — create, list-by-proyecto (scoped, excludes other proyecto's rows), list-empty, delete, delete-nonexistent returns false |
+| `tests/seed.test.ts` | Created | RED→GREEN: 4 tests against a real temp-file DB (migrated via `migrate()`, same as production) — 2-3 proyectos each with categoria+>=1 contacto+>=1 inspiracion linked (via `getProyectoConDetalle`), >=2 distinct `estado` values, re-run without `reset` throws `UNIQUE constraint failed` and leaves proyecto count unchanged (transaction rollback), `{ reset: true }` wipes and reseeds cleanly |
+| `scripts/seed.ts` | Created | Exports `seed(db, { reset? })` — single `db.transaction`; optional `wipe()` (child-first: proyectos→cascade removes join+inspiraciones, then contactos, then categorias) before inserting 3 typed-literal categorias/contactos/proyectos (with contact links + 1-3 inspiraciones each) through the public repository API; CLI entrypoint guarded by `import.meta.url` check reads `DATABASE_URL`/`--reset` and is invoked via `npm run db:seed` |
+| `openspec/config.yaml` | Modified | `rules.apply.test_command`/`rules.verify.test_command` set to `npm test`, `rules.verify.build_command` set to `npm run build`; `testing:` block refreshed from stale pre-stack `not_detected` state to `detected` with layer/tool availability reflecting the now-existing Vitest+tsc setup |
 
 ## TDD Cycle Evidence
 
@@ -86,13 +95,14 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 | 3.7/3.8 | `tests/repositories/proyectos.test.ts` | Integration | ✅ 8/8 (contactos suite re-run) | ✅ Written first — referenced non-existent `@/db/repositories/inspiraciones` (dependency) and the full `proyectos` API surface, confirmed failing (`Failed to resolve import`) | ✅ Implemented `inspiraciones.ts` then full `proyectos.ts`; first run failed 2/11 (`getProyectoConDetalle` — `db.query.proyectos.findFirst(...)` returns a thenable query builder under the better-sqlite3 driver, not resolved data; fixed by chaining `.sync()`); re-ran → 11/11 passed | ✅ create (default vs explicit `tiempoInvertidoH`), `listProyectos` (estado / categoriaId / contactoId / no-filter, 4 cases), `getProyectoConDetalle` (found-with-nested-data / not-found→null), `deleteProyecto` (cascades / not-found→false) | ➖ None needed — one repository function per concern |
 | 3.9/3.10 | `tests/repositories/inspiraciones.test.ts` | Integration | ✅ 11/11 (proyectos suite re-run) | ➖ Production code (`inspiraciones.ts`) already existed as a 3.7/3.8 dependency; per strict-tdd.md "if production code already exists, write a test for the NEW behavior not yet implemented" — this test file exercises `inspiraciones.ts` directly (list scoping across two proyectos) rather than only indirectly via `proyectos.test.ts` | ✅ First run failed 1/5 (`UNIQUE constraint failed: categorias.nombre` — test bug: `makeProyecto` reused the literal name `"Robótica"` across two proyectos in the same test); fixed the test helper to suffix a counter, re-ran → 5/5 passed | ✅ list-scoped-to-proyecto (2 proyectos, asserts only the target's rows return) / list-empty, delete / delete-nonexistent→false | ➖ None needed |
 | 3.11 | N/A | Barrel export | N/A (new) | N/A — re-export only, no logic; verified by `npx tsx -e "import * as repos from './src/db/repositories/index'; console.log(Object.keys(repos))"` printing all 16 expected function names | N/A | N/A | N/A |
+| 4.1/4.2 | `tests/seed.test.ts` | Integration (seed + real temp-file DB, same migrations as production) | ✅ 29/29 (`tests/repositories` re-run before touching `scripts/`) | ✅ Written first — referenced non-existent `../scripts/seed`, confirmed failing via `npx vitest run tests/seed.test.ts` (`Failed to resolve import "../scripts/seed"`) | ✅ Implemented `scripts/seed.ts`; re-ran same command → 4/4 passed | ✅ 4 cases: happy-path nested-join assertions (categoria+contactos+inspiraciones per proyecto via `getProyectoConDetalle`), estado diversity (`Set` size >=2), re-run-without-reset throws `UNIQUE constraint failed` AND count unchanged (proves transaction rollback, not silent dup), `{reset:true}` wipes+reseeds cleanly | ➖ None needed — declarative seed-data literals + two small helper functions (`insertSeedData`, `wipe`), no duplication to extract |
 
 ### Test Summary
-- **Total tests written**: 46 (1 Phase 1 + 16 Phase 2 + 29 Phase 3: 5 categorias + 8 contactos + 11 proyectos + 5 inspiraciones)
-- **Total tests passing**: 46
-- **Layers used**: Component (1), Unit/schema (16), Integration/repositories (29)
+- **Total tests written**: 50 (1 Phase 1 + 16 Phase 2 + 29 Phase 3 + 4 Phase 4: 5 categorias + 8 contactos + 11 proyectos + 5 inspiraciones + 4 seed)
+- **Total tests passing**: 50
+- **Layers used**: Component (1), Unit/schema (16), Integration/repositories (29), Integration/seed (4)
 - **Approval tests**: None — no refactoring tasks, all new files
-- **Pure functions created**: 0 (Phase 3 repositories are thin, deliberately impure wrappers over a `Db` connection per design.md's "every fn takes `Db` first" interface — the DB call itself is the point of each function)
+- **Pure functions created**: 0 (Phase 3 repositories and Phase 4 seed script are thin, deliberately impure wrappers over a `Db` connection per design.md's "every fn takes `Db` first" interface — the DB call itself is the point of each function)
 
 ## Work Unit Evidence
 
@@ -127,6 +137,16 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 | Runtime harness command/scenario and exact result | N/A per tasks.md's own Suggested Work Units table — no `scripts/seed.ts` exists yet (PR 4), so repositories are exercised only through the Vitest integration suite against a real migrated `:memory:` DB (same migration files as production, per design.md's Test DB decision); supplementary manual check: `npx tsx -e "import * as repos from './src/db/repositories/index'; console.log(Object.keys(repos))"` confirmed all 16 functions are reachable from the barrel export |
 | Rollback boundary | Delete `src/db/repositories/`, `src/db/types.ts`, `src/db/errors.ts`, `tests/repositories/`, and revert the `relations()` addition in `src/db/schema.ts` — repository returns to the PR 2 schema/client state; does not touch `scripts/seed.ts` or `openspec/config.yaml` (PR 4) |
 
+### Unit 4 (Phase 4 / PR 4) — FINAL WORK UNIT
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run tests/seed.test.ts` → `Test Files 1 passed (1)`, `Tests 4 passed (4)` |
+| Full suite | `npm test` → `Test Files 7 passed (7)`, `Tests 50 passed (50)` |
+| Typecheck | `npx tsc --noEmit` → no errors |
+| Runtime harness command/scenario and exact result | Ran the real CLI against a fresh temp-file DB (not just the Vitest suite): `DATABASE_URL=/tmp/.../verify.db npx tsx scripts/migrate.ts` → 5 tables created; `npx tsx scripts/seed.ts` → `Seed complete (...).`; re-running the identical command WITHOUT `--reset` → `SqliteError: UNIQUE constraint failed: categorias.nombre`, process exits non-zero (clean failure, not silent duplication); `npx tsx scripts/seed.ts --reset` → `Seed complete (...) [reset].` succeeds. Then ran `getProyectoConDetalle` via `npx tsx -e '...'` against that same file DB and confirmed the returned JSON has nested `categoria` (object), `contactos` (array, 2 entries), and `inspiraciones` (array, 2 entries) all populated from real joined rows. Also ran `npm run dev` and `curl http://localhost:3000/` → `HTTP 200`, server log `GET / 200` |
+| Rollback boundary | Delete `scripts/seed.ts`, `tests/seed.test.ts`; revert `openspec/config.yaml`'s `rules.apply.test_command`/`rules.verify.test_command`/`rules.verify.build_command` and `testing:` block to their pre-PR-4 values — repository returns to the PR 3 repository-layer state; does not touch `src/db/` or `tests/repositories/` |
+
 ## Deviations from Design
 - Next.js 16's new `agentRules` feature auto-generates root `AGENTS.md` and `CLAUDE.md` on first `next dev` run and mutates `tsconfig.json` (`jsx: react-jsx`, adds `.next/dev/types/**/*.ts` to `include`). This is Next.js tooling behavior, not part of design.md's file structure. Disabled it explicitly via `agentRules: false` in `next.config.ts` and removed the generated `AGENTS.md`/`CLAUDE.md` files to avoid unwanted repo noise; kept the `tsconfig.json` auto-adjustments (they are required for `next dev` to run and are harmless/correct).
 - `@types/node` pinned to `^26.2.0` instead of `^24.14.0` — the local registry no longer serves an `@types/node` release matching `^24.14.0` (latest is `26.2.0`); Node runtime itself is unaffected (still v24.14.0).
@@ -136,18 +156,20 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 - **Phase 3 added `relations()` exports to `src/db/schema.ts`** (a Phase 2 file). design.md's Interfaces section states `getProyectoConDetalle` "uses one Drizzle relational query (`db.query.proyectos.findFirst({ with: {...} })`)" but never explicitly lists `relations()` calls in the File Structure/Schema sections. `db.query.*` requires `relations()` definitions passed through the `schema` module to resolve `with: {...}`, so this addition is required to satisfy design's own stated interface, not a deviation from it. Verified non-destructive: the full Phase 2 constraints suite (16/16) was re-run unchanged before and after this edit.
 - **`db.query.proyectos.findFirst(...)` requires an explicit `.sync()` call** under the `better-sqlite3` driver — otherwise it returns an unresolved thenable query-builder object, not data (discovered via a failing test: `Cannot read properties of undefined (reading 'map')`). Not documented in design.md; recorded here for future maintainers touching relational queries.
 - **`updateProyecto`'s `updated_at` bump is proven with a real 1.1s wait**, not a mocked clock. The column defaults to `sql\`(datetime('now'))\`` (whole-second SQLite resolution, not millisecond), and `better-sqlite3` runs natively so Vitest's fake timers cannot influence it. Documented here so a future refactor to millisecond-precision timestamps (e.g. `strftime('%Y-%m-%d %H:%M:%f')`) is understood as an intentional option, not required by current spec/design.
+- **Phase 4 wipe order in `scripts/seed.ts`'s `--reset` path**: deletes proyectos first (schema `ON DELETE CASCADE` removes their `proyecto_contactos`/`inspiraciones` rows automatically), then contactos, then categorias last — required because `categoria_id` is FK `RESTRICT`, so any surviving proyecto row would block a categoria delete. Not spelled out at this level of detail in design.md's one-line "deletes rows child-first" note; recorded here for future maintainers.
+- **`db.transaction`'s callback parameter (`tx`) is cast to `Db` via `as unknown as Db`** in `scripts/seed.ts`. Drizzle's `SQLiteTransaction` type is structurally close to `BetterSQLite3Database<typeof schema>` but not identically named, so passing `tx` straight into the existing `Db`-typed repository functions needs an explicit cast. Verified safe: `npx tsc --noEmit` passes and the real transaction-rollback behavior (task 4.1's UNIQUE-violation test) is exercised and passes, confirming `tx` is a fully functional query interface at runtime, not a type-only workaround.
 
 ## Issues Found
-None blocking. The `npm install` hang (see Deviations) was resolved by pinning `vite`; documenting it here in case a future `npm install` on this lockfile needs the same pin. Phase 3 found and fixed two implementation-adjacent issues during TDD (both documented in TDD Cycle Evidence above): the FK-error code assumption in `deleteCategoria` (`SQLITE_CONSTRAINT_FOREIGNKEY` vs. actual `SQLITE_CONSTRAINT_TRIGGER`) and the missing `.sync()` on relational queries.
+None blocking. The `npm install` hang (see Deviations) was resolved by pinning `vite`; documenting it here in case a future `npm install` on this lockfile needs the same pin. Phase 3 found and fixed two implementation-adjacent issues during TDD (both documented in TDD Cycle Evidence above): the FK-error code assumption in `deleteCategoria` (`SQLITE_CONSTRAINT_FOREIGNKEY` vs. actual `SQLITE_CONSTRAINT_TRIGGER`) and the missing `.sync()` on relational queries. Phase 4 found no new implementation issues; the seed script worked as designed on first GREEN pass.
 
 ## Remaining Tasks
-- [ ] Phase 4: Seed Script & Verification (PR 4) — 4.1–4.4
+None. All 30 tasks across all 4 phases are complete.
 
 ## Workload / PR Boundary
-- Mode: chained PR slice (stacked-to-main)
-- Current work unit: Unit 3 — Repository layer + integration tests (PR 3)
-- Boundary: starts from the PR 2 schema/client (branch `pr3-repositories` off `pr2-schema`), ends with all 16 typed repository functions (`categorias`, `contactos`, `proyectos`, `inspiraciones`) barrel-exported from `src/db/repositories/index.ts`, domain types in `src/db/types.ts`, typed errors in `src/db/errors.ts`, and 29 passing integration tests. Does not touch `scripts/seed.ts` or `openspec/config.yaml`'s test-command wiring — those are PR 4.
-- Estimated review budget impact: 12 files changed, 767 insertions (types ~25 lines, errors ~20 lines, 4 repository modules + barrel ~180 lines total, `schema.ts` relations addition ~40 lines, 4 repository test files ~500 lines). Well under the 400-line budget when counting only authored non-test-boilerplate logic; total including tests is above 400 but tests are the acceptance criteria for Strict TDD and were reviewed as part of the same deliverable slice per the Suggested Work Units table (Unit 3 = "Typed repository module + repo tests" as one PR).
+- Mode: chained PR slice (stacked-to-main) — this was the last slice in the chain
+- Current work unit: Unit 4 — Seed script + config.yaml test-command wiring + end-to-end verification (PR 4)
+- Boundary: starts from the PR 3 repository layer (branch `pr4-seed` off `pr3-repositories`), ends with `scripts/seed.ts` (typed, transactional, `--reset`-aware), `tests/seed.test.ts` (4 passing integration tests against a real temp-file DB), and `openspec/config.yaml`'s `rules.apply`/`rules.verify` test/build commands and `testing:` block reflecting the real, working Vitest+tsc setup. This is the final PR of the change — no further work units remain.
+- Estimated review budget impact: 3 files changed (`scripts/seed.ts` ~155 lines, `tests/seed.test.ts` ~65 lines, `openspec/config.yaml` ~9 lines changed), well under the 400-line budget.
 
 ## Status
-26/30 total tasks complete (1.1–1.8, 2.1–2.7, 3.1–3.11). Phase 1, Phase 2 and Phase 3 all COMPLETE. 0/4 remaining tasks (Phase 4) started. Ready for orchestrator to review/push/PR PR 3, then dispatch the next apply batch for Phase 4.
+30/30 total tasks complete (1.1–1.8, 2.1–2.7, 3.1–3.11, 4.1–4.4). Phase 1, Phase 2, Phase 3 and Phase 4 all COMPLETE. Full `npm test` suite: 50/50 passing across 7 test files. `npx tsc --noEmit`: no errors. End-to-end verification of every proposal success criterion performed against a real temp-file DB and a real `npm run dev` server (see Unit 4 evidence above) — all passed. The change `base-datos-visual-proyectos` is fully implemented. Ready for `sdd-verify`.
