@@ -12,6 +12,7 @@ import { createCategoria } from "@/db/repositories/categorias";
 import { createContacto, vincularContacto } from "@/db/repositories/contactos";
 import { createInspiracion } from "@/db/repositories/inspiraciones";
 import { proyectoContactos, inspiraciones } from "@/db/schema";
+import { NotFoundError } from "@/db/errors";
 
 function baseInput(categoriaId: number, overrides: Partial<Parameters<typeof createProyecto>[1]> = {}) {
   return {
@@ -133,6 +134,10 @@ describe("proyectos repository", () => {
       expect(updated.estado).toBe("en_desarrollo");
       expect(updated.updatedAt).not.toBe(proyecto.updatedAt);
     });
+
+    it("throws NotFoundError for a missing id", () => {
+      expect(() => updateProyecto(db, 999, { estado: "en_desarrollo" })).toThrow(NotFoundError);
+    });
   });
 
   describe("deleteProyecto", () => {
@@ -147,15 +152,14 @@ describe("proyectos repository", () => {
         notas: null,
       });
 
-      const result = deleteProyecto(db, proyecto.id);
+      deleteProyecto(db, proyecto.id);
 
-      expect(result).toBe(true);
       expect(db.select().from(proyectoContactos).where(eq(proyectoContactos.proyectoId, proyecto.id)).all()).toEqual([]);
       expect(db.select().from(inspiraciones).where(eq(inspiraciones.proyectoId, proyecto.id)).all()).toEqual([]);
     });
 
-    it("returns false when the proyecto does not exist", () => {
-      expect(deleteProyecto(db, 999)).toBe(false);
+    it("throws NotFoundError when the proyecto does not exist", () => {
+      expect(() => deleteProyecto(db, 999)).toThrow(NotFoundError);
     });
   });
 });

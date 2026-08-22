@@ -30,21 +30,21 @@ Threat matrix: N/A (design.md confirms no shell/subprocess/VCS boundary in this 
 
 ## Phase 0: Server Action Spike (run first — resolves architecture risk before slices 2–4)
 
-- [ ] 0.1 RED `tests/lib/forms/actions-spike.test.ts` — directly import a trivial `"use server"` module and call its export; assert it resolves.
-- [ ] 0.2 Create a throwaway `"use server"` module with one no-op async export to satisfy 0.1.
-- [ ] 0.3 Run the spike. If import/invocation fails under Vitest, record the decision to split every `actions.ts` into `actions.impl.ts` (plain, db-injected, testable) + thin `"use server"` wrapper for all later phases; delete spike files regardless of outcome.
+- [x] 0.1 RED `tests/lib/forms/actions-spike.test.ts` — directly import a trivial `"use server"` module and call its export; assert it resolves.
+- [x] 0.2 Create a throwaway `"use server"` module with one no-op async export to satisfy 0.1.
+- [x] 0.3 Run the spike. If import/invocation fails under Vitest, record the decision to split every `actions.ts` into `actions.impl.ts` (plain, db-injected, testable) + thin `"use server"` wrapper for all later phases; delete spike files regardless of outcome. **Outcome: import/invocation succeeded — no split required.**
 
 ## Phase 1 (PR 1 — repository layer)
 
-- [ ] 1.1 RED `tests/repositories/categorias.test.ts` — `updateCategoria` updates nombre/color; throws `NotFoundError` for missing id.
-- [ ] 1.2 GREEN `src/db/repositories/categorias.ts` — add `updateCategoria` (`.returning().get()`, throw when undefined).
-- [ ] 1.3 RED `tests/repositories/contactos.test.ts` — `updateContacto` updates nombre/url; `deleteContacto` throws `NotFoundError`.
-- [ ] 1.4 GREEN `src/db/repositories/contactos.ts` — add `updateContacto`; `deleteContacto` → `void` + throw on 0 changes.
-- [ ] 1.5 RED/GREEN `src/db/repositories/proyectos.ts` — `updateProyecto`/`deleteProyecto` throw `NotFoundError` instead of returning falsy; update existing boolean assertions to `expect(() => ...).toThrow(NotFoundError)`.
-- [ ] 1.6 RED/GREEN `src/db/repositories/inspiraciones.ts` — `deleteInspiracion` → `void` + throw `NotFoundError`.
-- [ ] 1.7 `src/db/repositories/index.ts` — export `updateCategoria`, `updateContacto`.
-- [ ] 1.8 Regression test: `deleteCategoria` on an in-use categoria still throws `CategoriaEnUsoError` (existing FK catch precedes the new NotFoundError check).
-- [ ] 1.9 `npm test` (full repo suite) + `npm run build`.
+- [x] 1.1 RED `tests/repositories/categorias.test.ts` — `updateCategoria` updates nombre/color; throws `NotFoundError` for missing id.
+- [x] 1.2 GREEN `src/db/repositories/categorias.ts` — add `updateCategoria` (`.returning().get()`, throw when undefined).
+- [x] 1.3 RED `tests/repositories/contactos.test.ts` — `updateContacto` updates nombre/url; `deleteContacto` throws `NotFoundError`.
+- [x] 1.4 GREEN `src/db/repositories/contactos.ts` — add `updateContacto`; `deleteContacto` → `void` + throw on 0 changes.
+- [x] 1.5 RED/GREEN `src/db/repositories/proyectos.ts` — `updateProyecto`/`deleteProyecto` throw `NotFoundError` instead of returning falsy; update existing boolean assertions to `expect(() => ...).toThrow(NotFoundError)`.
+- [x] 1.6 RED/GREEN `src/db/repositories/inspiraciones.ts` — `deleteInspiracion` → `void` + throw `NotFoundError`.
+- [x] 1.7 `src/db/repositories/index.ts` — export `updateCategoria`, `updateContacto`.
+- [x] 1.8 Regression test: `deleteCategoria` on an in-use categoria still throws `CategoriaEnUsoError` (existing FK catch precedes the new NotFoundError check).
+- [x] 1.9 `npm test` (full repo suite) + `npm run build`.
 
 ## Phase 2 (PR 2 — proyecto creation)
 

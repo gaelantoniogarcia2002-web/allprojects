@@ -2,6 +2,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type { Db } from "../client";
 import { categorias, proyectoContactos, proyectos } from "../schema";
 import type { Categoria, FiltroProyectos, NuevoProyecto, Proyecto, ProyectoConDetalle } from "../types";
+import { NotFoundError } from "../errors";
 
 /**
  * Persists a new proyecto. `tiempo_invertido_h` defaults to 0 at the
@@ -66,23 +67,29 @@ export function getProyectoConDetalle(db: Db, id: number): ProyectoConDetalle | 
 
 /**
  * Applies a partial patch to a proyecto and bumps `updated_at` to the
- * current time.
+ * current time. Throws `NotFoundError` when no proyecto with `id` exists.
  */
 export function updateProyecto(db: Db, id: number, patch: Partial<NuevoProyecto>): Proyecto {
-  return db
+  const updated = db
     .update(proyectos)
     .set({ ...patch, updatedAt: sql`(datetime('now'))` })
     .where(eq(proyectos.id, id))
     .returning()
     .get();
+  if (!updated) {
+    throw new NotFoundError("Proyecto", id);
+  }
+  return updated;
 }
 
 /**
  * Deletes a proyecto. `ON DELETE CASCADE` removes its `proyecto_contactos`
  * join rows and `inspiraciones` rows; `categorias`/`contactos` rows are
- * left untouched. Returns `false` when no proyecto with `id` exists.
+ * left untouched. Throws `NotFoundError` when no proyecto with `id` exists.
  */
-export function deleteProyecto(db: Db, id: number): boolean {
+export function deleteProyecto(db: Db, id: number): void {
   const result = db.delete(proyectos).where(eq(proyectos.id, id)).run();
-  return result.changes > 0;
+  if (result.changes === 0) {
+    throw new NotFoundError("Proyecto", id);
+  }
 }

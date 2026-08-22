@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Db } from "../client";
 import { categorias } from "../schema";
 import type { Categoria, NuevaCategoria } from "../types";
-import { CategoriaEnUsoError } from "../errors";
+import { CategoriaEnUsoError, NotFoundError } from "../errors";
 
 export function createCategoria(db: Db, input: NuevaCategoria): Categoria {
   return db.insert(categorias).values(input).returning().get();
@@ -10,6 +10,18 @@ export function createCategoria(db: Db, input: NuevaCategoria): Categoria {
 
 export function listCategorias(db: Db): Categoria[] {
   return db.select().from(categorias).all();
+}
+
+/**
+ * Applies a partial patch (`nombre` and/or `color`) to a categoria.
+ * Throws `NotFoundError` when no categoria with `id` exists.
+ */
+export function updateCategoria(db: Db, id: number, patch: Partial<NuevaCategoria>): Categoria {
+  const updated = db.update(categorias).set(patch).where(eq(categorias.id, id)).returning().get();
+  if (!updated) {
+    throw new NotFoundError("Categoria", id);
+  }
+  return updated;
 }
 
 /**

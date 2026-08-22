@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { makeTestDb, type TestDb } from "../helpers/test-db";
-import { createCategoria, listCategorias, deleteCategoria } from "@/db/repositories/categorias";
+import {
+  createCategoria,
+  listCategorias,
+  updateCategoria,
+  deleteCategoria,
+} from "@/db/repositories/categorias";
 import { createProyecto } from "@/db/repositories/proyectos";
-import { CategoriaEnUsoError } from "@/db/errors";
+import { CategoriaEnUsoError, NotFoundError } from "@/db/errors";
 
 describe("categorias repository", () => {
   let db: TestDb;
@@ -40,6 +45,30 @@ describe("categorias repository", () => {
     });
   });
 
+  describe("updateCategoria", () => {
+    it("updates a categoria's color", () => {
+      const categoria = createCategoria(db, { nombre: "Robótica Hobbie", color: "#3B82F6" });
+
+      const updated = updateCategoria(db, categoria.id, { color: "#EF4444" });
+
+      expect(updated.color).toBe("#EF4444");
+      expect(updated.nombre).toBe("Robótica Hobbie");
+    });
+
+    it("updates a categoria's nombre", () => {
+      const categoria = createCategoria(db, { nombre: "Robótica Hobbie", color: "#3B82F6" });
+
+      const updated = updateCategoria(db, categoria.id, { nombre: "Robótica Avanzada" });
+
+      expect(updated.nombre).toBe("Robótica Avanzada");
+      expect(updated.color).toBe("#3B82F6");
+    });
+
+    it("throws NotFoundError for a missing id", () => {
+      expect(() => updateCategoria(db, 999, { color: "#EF4444" })).toThrow(NotFoundError);
+    });
+  });
+
   describe("deleteCategoria", () => {
     it("throws CategoriaEnUsoError when referenced by a proyecto", () => {
       const categoria = createCategoria(db, { nombre: "Robótica Hobbie", color: "#3B82F6" });
@@ -64,6 +93,24 @@ describe("categorias repository", () => {
       deleteCategoria(db, categoria.id);
 
       expect(listCategorias(db)).toEqual([]);
+    });
+
+    it("regression: FK-restrict precedence — an in-use categoria still throws CategoriaEnUsoError, never NotFoundError", () => {
+      const categoria = createCategoria(db, { nombre: "En uso", color: "#3B82F6" });
+      createProyecto(db, {
+        titulo: "Proyecto dependiente",
+        categoriaId: categoria.id,
+        tiempoEstimadoH: 10,
+        frecuenciaAvance: "semanal",
+        estado: "idea",
+        montoPago: null,
+        carpetaDriveUrl: null,
+        repositorioGhUrl: null,
+      });
+
+      expect(() => deleteCategoria(db, categoria.id)).toThrow(CategoriaEnUsoError);
+      expect(() => deleteCategoria(db, categoria.id)).not.toThrow(NotFoundError);
+      expect(listCategorias(db)).toHaveLength(1);
     });
   });
 });

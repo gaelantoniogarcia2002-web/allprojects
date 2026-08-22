@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import type { Db } from "../client";
 import { contactos, proyectoContactos } from "../schema";
 import type { Contacto, NuevoContacto } from "../types";
+import { NotFoundError } from "../errors";
 
 export function createContacto(db: Db, input: NuevoContacto): Contacto {
   return db.insert(contactos).values(input).returning().get();
@@ -35,11 +36,25 @@ export function desvincularContacto(db: Db, proyectoId: number, contactoId: numb
 }
 
 /**
+ * Applies a partial patch (`nombre` and/or `url`) to a contacto.
+ * Throws `NotFoundError` when no contacto with `id` exists.
+ */
+export function updateContacto(db: Db, id: number, patch: Partial<NuevoContacto>): Contacto {
+  const updated = db.update(contactos).set(patch).where(eq(contactos.id, id)).returning().get();
+  if (!updated) {
+    throw new NotFoundError("Contacto", id);
+  }
+  return updated;
+}
+
+/**
  * Deletes a contacto. `ON DELETE CASCADE` on `proyecto_contactos.contacto_id`
  * removes only its join rows; referenced proyectos are left untouched.
- * Returns `false` when no contacto with `id` exists.
+ * Throws `NotFoundError` when no contacto with `id` exists.
  */
-export function deleteContacto(db: Db, id: number): boolean {
+export function deleteContacto(db: Db, id: number): void {
   const result = db.delete(contactos).where(eq(contactos.id, id)).run();
-  return result.changes > 0;
+  if (result.changes === 0) {
+    throw new NotFoundError("Contacto", id);
+  }
 }
