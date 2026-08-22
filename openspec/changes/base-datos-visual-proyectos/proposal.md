@@ -72,9 +72,9 @@ The change is purely additive to an empty repository. Rollback = delete the crea
 
 ## Success Criteria
 
-- [ ] `npm run dev` starts the Next.js app without errors.
-- [ ] `npm test` runs Vitest and all tests pass.
-- [ ] Migrations create all five tables with enum CHECKs and foreign keys enforced.
-- [ ] `npm run db:seed` is idempotent-safe and loads 2–3 projects with linked categories, contacts and inspirations.
-- [ ] A repository query returns a seeded project with its category, contacts and inspirations joined.
-- [ ] `openspec/config.yaml` testing section reflects the real, working test command.
+- [x] `npm run dev` starts the Next.js app without errors.
+- [x] `npm test` runs Vitest and all tests pass.
+- [x] Migrations create all five tables with enum CHECKs and foreign keys enforced.
+- [x] `npm run db:seed` is idempotent-safe and loads 2–3 projects with linked categories, contacts and inspirations.
+- [x] A repository query returns a seeded project with its category, contacts and inspirations joined.
+- [x] `openspec/config.yaml` testing section reflects the real, working test command.

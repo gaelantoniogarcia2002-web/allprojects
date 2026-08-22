@@ -118,11 +118,11 @@ The system MUST persist a `Contacto` with `id` (PK), `nombre` (required text) an
 - WHEN the contacto is linked to both proyectos via `proyecto_contactos`
 - THEN both join rows persist and each proyecto's contact list includes that contacto
 
-#### Scenario: Reject duplicate association
+#### Scenario: Re-link an already-linked contacto is idempotent
 
 - GIVEN a proyecto and contacto are already linked
-- WHEN the same `(proyecto_id, contacto_id)` pair is inserted again
-- THEN the system MUST reject it as a primary key violation
+- WHEN the same `(proyecto_id, contacto_id)` pair is linked again
+- THEN the operation succeeds without error and no duplicate join row is created
 
 ### Requirement: Contacto Deletion Removes Only Join Rows
 
