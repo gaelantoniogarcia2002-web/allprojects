@@ -1,5 +1,97 @@
 # Apply Progress: Fase 2 — Vista Galería, Filtros y Módulo Comparador
 
+## FINAL STATUS: 41/41 tasks complete — Fase 2 fully implemented
+
+All four work units (PR 1 Foundation, PR 2 Gallery Rendering, PR 3 Filtering, PR 4 Comparison Module) are complete, TDD-verified, and committed to their respective branches (`pr1-geometry` → `pr2-gallery-rendering` → `pr3-filtering` → `pr4-comparison`). `npm test` (109/109) and `npm run build` pass on the full accumulated diff. `proposal.md` Success Criteria are all checked. Ready for `sdd-verify`.
+
+---
+
+## Batch 4
+
+**Change**: galeria-visual-proyectos
+**Work unit**: Unit 4 — Comparison Module (PR 4, base: PR 3 branch `pr3-filtering`, worked on `pr4-comparison`)
+**Mode**: Strict TDD
+
+### Completed Tasks
+- [x] 4.1 RED: `src/components/comparison/comparison-toggle.test.tsx`
+- [x] 4.2 GREEN: `src/components/comparison/comparison-toggle.tsx`
+- [x] 4.3 RED: `src/components/comparison/selection-checkbox.test.tsx`
+- [x] 4.4 GREEN: `src/components/comparison/selection-checkbox.tsx`; wired into `proyecto-card.tsx` (extended `proyecto-card.test.tsx` RED first) and threaded `comparisonMode` through `gallery-grid.tsx`
+- [x] 4.5 RED: `src/components/comparison/comparison-table.test.tsx`
+- [x] 4.6 GREEN: `src/components/comparison/comparison-table.tsx`
+- [x] 4.7 RED: `src/components/comparison/comparison-overlay.test.tsx`
+- [x] 4.8 GREEN: `src/components/comparison/comparison-overlay.tsx`
+- [x] 4.9 GREEN: wired `<ComparisonToggle>` and `<ComparisonOverlay>` into `src/app/page.tsx`
+- [x] 4.10 Integration test: extended `tests/app/page.test.tsx` with `?modo=comparar&seleccion=1,3` fixture
+- [x] 4.11 Manual verification: `npm run dev` + `curl` with `?modo=comparar&seleccion=1,2`
+- [x] 4.12 Final check: `npm test` (109/109) and `npm run build` pass end-to-end; `proposal.md` Success Criteria checkboxes updated to `[x]`
+
+### Files Changed
+| File | Action | What Was Done |
+|------|--------|---------------|
+| `src/components/comparison/comparison-toggle.tsx` | Created | `'use client'`; self-contained (reads `useSearchParams()`/`parseGalleryParams`, pushes `buildGalleryHref` via `useRouter().push(..., { scroll: false })`), same pattern as `FilterBar`; enabling sets `comparisonMode: true`, disabling patches `{ comparisonMode: false, seleccion: [] }` to clear the selection |
+| `src/components/comparison/comparison-toggle.test.tsx` | Created | Mocks `next/navigation`; asserts enabling pushes `modo=comparar`, disabling with an existing selection pushes `/` (mode + selection cleared), checkbox reflects current URL in both states |
+| `src/components/comparison/selection-checkbox.tsx` | Created | `'use client'`; per-card checkbox, `proyectoId` prop, checked state from `seleccion` URL param, toggling adds/removes the id and pushes the patched URL |
+| `src/components/comparison/selection-checkbox.test.tsx` | Created | Unchecked/checked reflecting `seleccion`, add-on-check and remove-on-uncheck push assertions |
+| `src/components/gallery/proyecto-card.tsx` | Modified | Added optional `comparisonMode` prop (default `false`); renders `<SelectionCheckbox proyectoId={tile.id}>` next to the title only when `comparisonMode` is true |
+| `src/components/gallery/proyecto-card.test.tsx` | Modified | Added `next/navigation` mock (required by `SelectionCheckbox`); 2 new RED-then-GREEN cases: checkbox present when `comparisonMode`, absent when omitted/false |
+| `src/components/gallery/gallery-grid.tsx` | Modified | Added optional `comparisonMode` prop (default `false`), forwarded to each `<ProyectoCard>` |
+| `src/components/comparison/comparison-table.tsx` | Created | Presentational `<table>`; one column per tile (`tiles: GalleryTile[]` prop), rows for `tiempoEstimadoH`, `tiempoInvertidoH`, `montoPago` (renders "No establecido" when `null`), `frecuenciaAvance` |
+| `src/components/comparison/comparison-table.test.tsx` | Created | Multi-column row content assertions; explicit "No establecido" case for `montoPago: null` |
+| `src/components/comparison/comparison-overlay.tsx` | Created | `'use client'`; self-contained via `useSearchParams()`; renders `null` outside comparison mode; "Comparar seleccionados" trigger button; clicking with `<2` selections sets a blocked message (does not open); with `>=2` opens a `role="dialog"` composing `ComparisonTable` filtered to `seleccion`; closing only resets local `isOpen` state (URL `seleccion` untouched) |
+| `src/components/comparison/comparison-overlay.test.tsx` | Created | Mocks `next/navigation`; 4 cases: not rendered outside comparison mode, blocked-message with 1 selection, table opens and shows only selected proyectos with 2+, close hides the table while the trigger (and implicitly the selection) remains |
+| `src/app/page.tsx` | Modified | Imports and renders `<ComparisonToggle/>` in both the empty-state and populated branches; renders `<ComparisonOverlay tiles={tiles}/>` and passes `comparisonMode={params.comparisonMode}` to `<GalleryGrid>` in the populated branch |
+| `tests/app/page.test.tsx` | Modified | Added `fireEvent`/`within` imports; new integration test for `?modo=comparar&seleccion=1,3`: opens the overlay via the trigger button, asserts the table contains only the two selected proyectos (by title), the third stays absent from the table but still renders as a normal gallery card, and the "No establecido" cell renders for a `null` `montoPago` |
+| `openspec/changes/galeria-visual-proyectos/tasks.md` | Modified | Marked 4.1–4.12 `[x]` — all 48/48 tasks across all 4 phases now complete |
+| `openspec/changes/galeria-visual-proyectos/proposal.md` | Modified | All 6 Success Criteria checkboxes marked `[x]` |
+
+### TDD Cycle Evidence
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 4.1-4.2 | `comparison-toggle.test.tsx` | Component | N/A (new) | ✅ Written (`Failed to resolve import "./comparison-toggle"`) | ✅ 4/4 passed | ✅ 4 cases (enable, disable-clears-selection, reflects-active, reflects-inactive) | ➖ None needed |
+| 4.3-4.4 | `selection-checkbox.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 4/4 passed | ✅ 4 cases (unchecked, checked, add-on-check, remove-on-uncheck) | ➖ None needed |
+| 4.4 (wiring) | `proyecto-card.test.tsx` | Component | ✅ 3/3 pre-existing (Batch 2) | ✅ 2 new cases written first; ran RED against pre-wiring `ProyectoCard` and failed (`getByRole("checkbox")` found no element) | ✅ 5/5 passed after GREEN | ✅ 2 cases (comparisonMode true/false) | ➖ None needed |
+| 4.5-4.6 | `comparison-table.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 2/2 passed | ✅ 2 cases (multi-column rows, null-montoPago "not set") | ➖ None needed |
+| 4.7-4.8 | `comparison-overlay.test.tsx` | Component | N/A (new) | ✅ Written (module-resolution failure) | ✅ 4/4 passed | ✅ 4 cases (hidden-outside-mode, blocked-message, open-with-table, close-intact) | ➖ None needed |
+| 4.9-4.10 | `tests/app/page.test.tsx` | Integration | ✅ 7/7 pre-existing (Batch 3) | ✅ New fixture written and run — passed immediately since 4.1-4.8's GREEN components were already wired into `page.tsx` in 4.9 before this integration test was added (same execution-order pattern as Batch 2's 2.9-2.11: RED discipline honored at the component level; the integration test extends already-green wiring rather than driving new production code) | ✅ 8/8 passed | ✅ covered via the new `?modo=comparar&seleccion=1,3` fixture | ➖ None needed |
+
+### Test Summary
+- **Total tests written this batch**: 16 (14 component + 1 integration, plus 1 extension of an existing `page.test.tsx` file)
+- **Total tests passing**: 109/109 (`npm test`, full suite — up from 92 in Batch 3)
+- **Layers used**: Unit (0 new — reused Phase 1), Component (14), Integration (1 new + 7 pre-existing extended), E2E (0 — unavailable per config)
+- **Approval tests** (refactoring): None — no refactoring tasks in this batch
+- **Pure functions created**: 0 new — reused `parseGalleryParams`/`buildGalleryHref` from Phase 1
+
+### Work Unit Evidence
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run src/components/comparison` → 4 files, 14/14 passed; `npx vitest run src/components/gallery` → 4 files, 13/13 passed (incl. 2 new `proyecto-card` cases); `npx vitest run tests/app/page.test.tsx` → 8/8 passed |
+| Runtime harness command/scenario and exact result | `npm run dev` (`DATABASE_URL=./data/allprojects.db`) + `curl`: unfiltered `/` → HTTP 200; `/?modo=comparar&seleccion=1,2` → HTTP 200, response HTML contains 3 `data-testid="proyecto-card"`, the "Comparar seleccionados" trigger button, and 4 checkboxes (1 comparison-toggle + 3 per-card selection checkboxes); dev server log shows `GET / 200` and `GET /?modo=comparar&seleccion=1,2 200`, no errors |
+| Rollback boundary | Delete `src/components/comparison/`; revert `src/app/page.tsx` to the Batch 3 version (drop `ComparisonToggle`/`ComparisonOverlay` imports and usage, drop `comparisonMode` prop on `GalleryGrid`); revert `src/components/gallery/gallery-grid.tsx` and `proyecto-card.tsx` to their Batch 2 versions (drop `comparisonMode` prop and `SelectionCheckbox` usage); revert `proyecto-card.test.tsx` and `tests/app/page.test.tsx` to their Batch 3 versions |
+
+### Full Suite Confirmation
+`npm test` → 20 test files, 109/109 tests passed (baseline safety net: all 92 Batch-3 tests still pass; no regression).
+`npm run build` → Next.js 16.3.2 (Turbopack) compiled successfully, TypeScript check passed, `/` listed as dynamic (ƒ) route.
+
+### Deviations from Design
+- `design.md`'s Data Flow diagram annotates `<ComparisonOverlay/>` as "client, rendered when `modo=comparar && seleccion.length >= 2`" — read literally, this would mean the overlay component itself is only mounted once 2+ selections exist. That contradicts `project-comparison` spec's explicit "Fewer than two selections cannot open the comparison overlay" scenario, which requires the system to indicate the shortfall when the user *attempts* to open the overlay with fewer than 2 selections — impossible if the component isn't mounted at all below that threshold. Implemented instead: `ComparisonOverlay` mounts (and renders its trigger button) whenever `comparisonMode` is true, regardless of selection count; the `seleccion.length >= 2` gate applies only to whether clicking the trigger actually opens the dialog (otherwise it shows the blocked message). This is the literal, spec-driven reading of "gated on `comparisonMode && seleccion.length >= 2`" from `tasks.md` task 4.8, applied to the open action rather than the mount.
+- `SelectionCheckbox` and `ComparisonOverlay` follow the same self-contained URL-reading pattern established for `FilterBar` in Batch 3 (reading `useSearchParams()`/`parseGalleryParams` internally rather than receiving parsed `GalleryParams` as props) for consistency; `ComparisonToggle` likewise. `comparisonMode` is still passed as an explicit prop from `page.tsx` down through `GalleryGrid` to `ProyectoCard` (per the user's explicit instruction for this batch), since that boolean drives *rendering* (whether to show the checkbox at all) rather than URL-writing — the checkbox itself, once rendered, reads/writes `seleccion` independently.
+- `proyecto-card.test.tsx` required adding a `next/navigation` mock (previously absent) because `SelectionCheckbox` — now always in `ProyectoCard`'s render tree — calls `useRouter()`/`useSearchParams()`. This mirrors the mock already present in `filter-bar.test.tsx` and `tests/app/page.test.tsx`.
+
+### Issues Found
+None.
+
+### Workload / PR Boundary
+- Mode: feature-branch-chain (auto-chain), PR 4 of 4 (final)
+- Current work unit: Unit 4 — Comparison Module
+- Boundary: starts from `pr4-comparison` (base: `pr3-filtering`), ends with all Phase 4 tasks (4.1-4.12) complete and green — the last work unit of Fase 2
+- Estimated review budget impact: ~547 changed lines per `git commit` stat (15 files changed, 547 insertions(+), 26 deletions(-)) — above the 400-line guard for a single slice but within this work unit's own chained-PR-slice budget per the `feature-branch-chain` strategy recorded in `tasks.md`'s Review Workload Forecast (High risk, chained PRs recommended, `Decision needed before apply: No` since the chain strategy was already resolved at tasks time)
+
+### Status
+41/41 total tasks complete across all 4 phases (10 Phase 1 + 12 Phase 2 + 7 Phase 3 + 12 Phase 4), confirmed by `grep -c '^- \[x\]' tasks.md` matching `grep -c '^- \['`. Prior batches' running totals (out of "48") were a stale denominator carried in the narrative text only — `tasks.md` itself has always had exactly 41 checkbox items, and all 41 are now `[x]`. Fase 2 (galeria-visual-proyectos) is fully implemented. Ready for `sdd-verify`.
+
+---
+
 ## Batch 3
 
 **Change**: galeria-visual-proyectos
