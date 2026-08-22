@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import {
   sqliteTable,
   text,
@@ -100,3 +100,41 @@ export const inspiraciones = sqliteTable(
     index("inspiraciones_proyecto_id_idx").on(table.proyectoId),
   ]
 );
+
+// Relations power `db.query.*.findFirst({ with: {...} })` (Drizzle relational
+// query API), used by `getProyectoConDetalle` to fetch nested categoria,
+// contactos and inspiraciones without manual joins / row-fanout dedup.
+export const categoriasRelations = relations(categorias, ({ many }) => ({
+  proyectos: many(proyectos),
+}));
+
+export const contactosRelations = relations(contactos, ({ many }) => ({
+  proyectoContactos: many(proyectoContactos),
+}));
+
+export const proyectosRelations = relations(proyectos, ({ one, many }) => ({
+  categoria: one(categorias, {
+    fields: [proyectos.categoriaId],
+    references: [categorias.id],
+  }),
+  proyectoContactos: many(proyectoContactos),
+  inspiraciones: many(inspiraciones),
+}));
+
+export const proyectoContactosRelations = relations(proyectoContactos, ({ one }) => ({
+  proyecto: one(proyectos, {
+    fields: [proyectoContactos.proyectoId],
+    references: [proyectos.id],
+  }),
+  contacto: one(contactos, {
+    fields: [proyectoContactos.contactoId],
+    references: [contactos.id],
+  }),
+}));
+
+export const inspiracionesRelations = relations(inspiraciones, ({ one }) => ({
+  proyecto: one(proyectos, {
+    fields: [inspiraciones.proyectoId],
+    references: [proyectos.id],
+  }),
+}));
