@@ -1,0 +1,57 @@
+schema: spec-driven
+
+context: |
+  Project: allprojects — "Base de Datos Visual de Proyectos"
+  Stack: not yet chosen (greenfield, no code/package manager present)
+  Architecture: to be decided (candidate: modular structure for Gentleman AI Stack subagents)
+  Persistence: to be decided (candidate: Local SQLite / JSON / Supabase)
+  Domain entities: Proyecto (main), Inspiracion (sub-entity)
+  Source spec: /home/gael/allprojects/spec.md
+
+strict_tdd: true
+
+testing:
+  status: not_detected
+  reason: "No test runner detected — project has no package manager or source files yet."
+  strict_tdd_source: "agent marker (CLAUDE.md: 'Strict TDD Mode: enabled')"
+  test_layers:
+    unit: unavailable
+    integration: unavailable
+    e2e: unavailable
+  coverage:
+    available: false
+    command: ""
+  quality_tools:
+    linter: unavailable
+    type_checker: unavailable
+    formatter: unavailable
+  next_step: "Resolve strict_tdd test runner and layers once a stack is chosen (likely during sdd-propose/sdd-design for the first change)."
+
+rules:
+  proposal:
+    - Include a stack-selection decision (frontend framework, persistence layer) since none exists yet
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Cover the Proyecto and Inspiracion entities defined in /home/gael/allprojects/spec.md
+  design:
+    - Document the chosen persistence layer (SQLite / JSON / Supabase) with rationale
+    - Document the visual gallery rendering approach (masonry/grid, proportional sizing, progress fill)
+    - Include sequence diagrams for complex flows
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - First task group MUST bootstrap the chosen stack and test runner before feature work
+  apply:
+    guidelines:
+      - Follow existing code patterns once established
+      - Once a test runner exists, follow strict TDD (RED-GREEN-REFACTOR) per project marker
+    tdd: true
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
