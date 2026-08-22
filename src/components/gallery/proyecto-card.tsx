@@ -1,9 +1,11 @@
 import type { GalleryTile } from "@/lib/gallery/types";
 import { ProgressFill } from "./progress-fill";
 import { OverBudgetBadge } from "./over-budget-badge";
+import { SelectionCheckbox } from "@/components/comparison/selection-checkbox";
 
 type ProyectoCardProps = {
   tile: GalleryTile;
+  comparisonMode?: boolean;
 };
 
 /**
@@ -12,7 +14,7 @@ type ProyectoCardProps = {
  * border when over budget. No server-only imports: this renders inside the
  * client `GalleryGrid` (react-grid-layout) subtree.
  */
-export function ProyectoCard({ tile }: ProyectoCardProps) {
+export function ProyectoCard({ tile, comparisonMode = false }: ProyectoCardProps) {
   return (
     <div
       data-testid="proyecto-card"
@@ -21,7 +23,10 @@ export function ProyectoCard({ tile }: ProyectoCardProps) {
     >
       <ProgressFill tintColor={tile.tintColor} solidColor={tile.solidColor} percent={tile.percent} />
       <div className="relative z-10 flex flex-1 flex-col justify-between gap-1 p-2">
-        <h3 className="text-sm font-medium">{tile.titulo}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">{tile.titulo}</h3>
+          {comparisonMode && <SelectionCheckbox proyectoId={tile.id} />}
+        </div>
         <div className="flex items-center justify-between text-xs">
           <span>{tile.categoriaNombre}</span>
           <OverBudgetBadge isOverBudget={tile.isOverBudget} />

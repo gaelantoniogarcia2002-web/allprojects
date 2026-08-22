@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { makeTestDb, type TestDb } from "../helpers/test-db";
 import { createCategoria } from "@/db/repositories/categorias";
 import { createContacto, vincularContacto } from "@/db/repositories/contactos";
@@ -164,5 +164,28 @@ describe("Home page (gallery Server Component)", () => {
     const secondCards = second.getAllByTestId("proyecto-card").map((el) => el.textContent);
 
     expect(secondCards).toEqual(firstCards);
+  });
+
+  it("opens the comparison overlay for ?modo=comparar&seleccion=1,3 matching only those proyectos", async () => {
+    const db: TestDb = makeTestDb();
+    const roboticaId = createCategoria(db, { nombre: "Robótica", color: "#3B82F6" }).id;
+    const first = createProyecto(db, baseProyectoInput(roboticaId, { titulo: "Brazo robótico", tiempoEstimadoH: 40, tiempoInvertidoH: 10, montoPago: 150 }));
+    createProyecto(db, baseProyectoInput(roboticaId, { titulo: "Dashboard IoT", tiempoEstimadoH: 20, tiempoInvertidoH: 5, montoPago: 300 }));
+    const third = createProyecto(db, baseProyectoInput(roboticaId, { titulo: "Sensor IoT", tiempoEstimadoH: 15, tiempoInvertidoH: 20, montoPago: null }));
+    mockGetDb.mockReturnValue(db);
+
+    const { getByRole, getByTestId, queryByText } = await renderHome({
+      modo: "comparar",
+      seleccion: `${first.id},${third.id}`,
+    });
+
+    fireEvent.click(getByRole("button", { name: /comparar seleccionados/i }));
+
+    const table = getByTestId("comparison-table");
+    expect(within(table).getByText("Brazo robótico")).toBeInTheDocument();
+    expect(within(table).getByText("Sensor IoT")).toBeInTheDocument();
+    expect(within(table).queryByText("Dashboard IoT")).not.toBeInTheDocument();
+    expect(within(table).getByText(/no establecido/i)).toBeInTheDocument();
+    expect(queryByText("Dashboard IoT")).toBeInTheDocument(); // still visible as a gallery card, just not compared
   });
 });

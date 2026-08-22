@@ -11,6 +11,7 @@ const ROW_HEIGHT_PX = 60;
 
 type GalleryGridProps = {
   tiles: GalleryTile[];
+  comparisonMode?: boolean;
 };
 
 /**
@@ -19,7 +20,7 @@ type GalleryGridProps = {
  * fetches data itself; it only renders the `GalleryTile[]` view model built
  * by the server component.
  */
-export function GalleryGrid({ tiles }: GalleryGridProps) {
+export function GalleryGrid({ tiles, comparisonMode = false }: GalleryGridProps) {
   const layout: Layout = tiles.map((tile) => ({
     i: String(tile.id),
     x: tile.rect.x,
@@ -41,7 +42,7 @@ export function GalleryGrid({ tiles }: GalleryGridProps) {
     >
       {tiles.map((tile) => (
         <div key={String(tile.id)}>
-          <ProyectoCard tile={tile} />
+          <ProyectoCard tile={tile} comparisonMode={comparisonMode} />
         </div>
       ))}
     </GridLayoutWithWidth>
