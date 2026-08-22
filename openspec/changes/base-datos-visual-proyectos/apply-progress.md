@@ -163,13 +163,47 @@ Strict TDD (config `strict_tdd: true`), OpenSpec artifact store.
 None blocking. The `npm install` hang (see Deviations) was resolved by pinning `vite`; documenting it here in case a future `npm install` on this lockfile needs the same pin. Phase 3 found and fixed two implementation-adjacent issues during TDD (both documented in TDD Cycle Evidence above): the FK-error code assumption in `deleteCategoria` (`SQLITE_CONSTRAINT_FOREIGNKEY` vs. actual `SQLITE_CONSTRAINT_TRIGGER`) and the missing `.sync()` on relational queries. Phase 4 found no new implementation issues; the seed script worked as designed on first GREEN pass.
 
 ## Remaining Tasks
-None. All 30 tasks across all 4 phases are complete.
+None. All 30 original tasks across all 4 phases are complete, plus one verify-fix task (4.5, see below).
+
+## Verify-Fix: `sdd-verify` CRITICAL Finding #1 Resolved
+
+`sdd-verify`'s first pass (`verify-report.md`) found `data-seeding/spec.md`'s "Re-run the seed script" scenario was directly contradicted: `scripts/seed.ts` threw `SqliteError: UNIQUE constraint failed: categorias.nombre` and exited 1 on a second run without `--reset`, instead of completing without constraint violations.
+
+Explicit product decision (confirmed by the user): the spec's original literal behavior is correct — re-running `npm run db:seed` without `--reset` MUST complete successfully as an idempotent no-op (no throw, no duplication, exit 0). Only `--reset` wipes and reseeds.
+
+**TDD Cycle Evidence (verify-fix)**
+
+| Step | Command | Result |
+|---|---|---|
+| RED | `npx vitest run tests/seed.test.ts` (after rewriting the re-run test to assert `not.toThrow()` + unchanged row counts) | 1 failed: `expected [Function] to not throw an error but 'SqliteError: UNIQUE constraint failed…' was thrown` — confirms the old implementation genuinely fails the new assertion |
+| GREEN | `npx vitest run tests/seed.test.ts` (after fixing `scripts/seed.ts`) | 4/4 passed |
+| Full suite | `npm test` | 7 test files, 50/50 passed, exit 0 |
+| Typecheck | `npx tsc --noEmit` | No errors |
+
+**Implementation**: `scripts/seed.ts`'s `insertSeedData` now upserts on each entity's natural key instead of unconditionally inserting:
+- `categorias`: a new `upsertCategoria` helper does `db.insert(categorias).values(...).onConflictDoNothing().returning({ id }).get()` against the real `UNIQUE(categorias.nombre)` DB constraint, falling back to a `select` by `nombre` when the insert is skipped by the conflict.
+- `contactos`: no DB-level unique constraint exists on `nombre` (adding one was out of scope for this fix — it would be a schema/migration change affecting real, non-seed usage), so dedup is done at the application level: existing rows are loaded via `listContactos(db)` into a `Map<nombre, id>` and only names not already present are inserted.
+- `proyectos`: same application-level pattern, keyed on `titulo` (per the user's explicit instruction to treat `titulo` as the natural seed-dedup key) — existing titles are loaded via `listProyectos(db)` into a `Set`, and any seed proyecto whose `titulo` already exists is skipped entirely (including its contacto links and inspiraciones, since those were already created on the row's first insert).
+
+`vincularContacto` (`src/db/repositories/contactos.ts`) was NOT touched — its `onConflictDoNothing()` idempotent behavior is a separate, already-resolved design decision (see CRITICAL finding #2 in `verify-report.md`, resolved by updating `project-data-model/spec.md`'s "Reject duplicate association" scenario to "Re-link an already-linked contacto is idempotent").
+
+**Real CLI proof (not just the test assertion)**: ran `npx tsx scripts/migrate.ts` then `npx tsx scripts/seed.ts` three times in a row without `--reset` against a fresh temp-file DB. All three runs printed `Seed complete (...).` and exited 0; row counts after run 1, run 2, and run 3 were identical (`categorias=3, contactos=3, proyectos=3, proyecto_contactos=4, inspiraciones=5`). A subsequent `npx tsx scripts/seed.ts --reset` still wiped and reseeded correctly to the same counts.
+
+### Files Changed (verify-fix)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `scripts/seed.ts` | Modified | `insertSeedData` upserts on natural keys instead of unconditional insert; added `upsertCategoria` helper; updated the `seed()` docstring to describe the corrected idempotent behavior |
+| `tests/seed.test.ts` | Modified | Re-run test rewritten to assert `not.toThrow()` and unchanged `proyectos`/`categorias`/`contactos` counts (RED→GREEN cycle documented above); added `listCategorias`/`listContactos` imports |
+| `openspec/changes/base-datos-visual-proyectos/tasks.md` | Modified | Task 4.1 description updated to match corrected behavior; added task 4.5 documenting the verify-fix |
+| `openspec/changes/base-datos-visual-proyectos/apply-progress.md` | Modified | This section |
+| `openspec/changes/base-datos-visual-proyectos/verify-report.md` | Modified | CRITICAL finding #1 marked resolved with evidence (see file) |
 
 ## Workload / PR Boundary
-- Mode: chained PR slice (stacked-to-main) — this was the last slice in the chain
-- Current work unit: Unit 4 — Seed script + config.yaml test-command wiring + end-to-end verification (PR 4)
-- Boundary: starts from the PR 3 repository layer (branch `pr4-seed` off `pr3-repositories`), ends with `scripts/seed.ts` (typed, transactional, `--reset`-aware), `tests/seed.test.ts` (4 passing integration tests against a real temp-file DB), and `openspec/config.yaml`'s `rules.apply`/`rules.verify` test/build commands and `testing:` block reflecting the real, working Vitest+tsc setup. This is the final PR of the change — no further work units remain.
-- Estimated review budget impact: 3 files changed (`scripts/seed.ts` ~155 lines, `tests/seed.test.ts` ~65 lines, `openspec/config.yaml` ~9 lines changed), well under the 400-line budget.
+- Mode: chained PR slice (stacked-to-main) — this was the last slice in the chain; this verify-fix is a follow-up commit on the same `pr4-seed` branch, not a new PR
+- Current work unit: Unit 4 — Seed script + config.yaml test-command wiring + end-to-end verification (PR 4), plus verify-fix for CRITICAL finding #1
+- Boundary: touches only `scripts/seed.ts`, `tests/seed.test.ts`, and the change's own OpenSpec artifacts (`tasks.md`, `apply-progress.md`, `verify-report.md`); does not touch `src/db/`, `tests/repositories/`, or `openspec/config.yaml`
+- Estimated review budget impact: 2 source files changed (~50 lines net), well under the 400-line budget
 
 ## Status
-30/30 total tasks complete (1.1–1.8, 2.1–2.7, 3.1–3.11, 4.1–4.4). Phase 1, Phase 2, Phase 3 and Phase 4 all COMPLETE. Full `npm test` suite: 50/50 passing across 7 test files. `npx tsc --noEmit`: no errors. End-to-end verification of every proposal success criterion performed against a real temp-file DB and a real `npm run dev` server (see Unit 4 evidence above) — all passed. The change `base-datos-visual-proyectos` is fully implemented. Ready for `sdd-verify`.
+30/30 original tasks complete, plus verify-fix task 4.5. Full `npm test` suite: 50/50 passing across 7 test files. `npx tsc --noEmit`: no errors. Both `sdd-verify` CRITICAL findings are now resolved (finding #2 via spec.md correction in a prior step, finding #1 via this `scripts/seed.ts` fix). The change `base-datos-visual-proyectos` is fully implemented. Ready for `sdd-verify` re-run.

@@ -6,6 +6,8 @@ import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { createDb, type Db } from "@/db/client";
 import { seed } from "../scripts/seed";
 import { listProyectos, getProyectoConDetalle } from "@/db/repositories/proyectos";
+import { listCategorias } from "@/db/repositories/categorias";
+import { listContactos } from "@/db/repositories/contactos";
 
 describe("seed script", () => {
   let dbPath: string;
@@ -50,12 +52,17 @@ describe("seed script", () => {
     expect(estados.size).toBeGreaterThanOrEqual(2);
   });
 
-  it("fails on UNIQUE(categorias.nombre) instead of silently duplicating when re-run without --reset", () => {
+  it("is idempotent when re-run without --reset: completes without throwing and does not duplicate rows", () => {
     seed(db);
-    const countAfterFirstRun = listProyectos(db).length;
+    const proyectoCountAfterFirstRun = listProyectos(db).length;
+    const categoriaCountAfterFirstRun = listCategorias(db).length;
+    const contactoCountAfterFirstRun = listContactos(db).length;
 
-    expect(() => seed(db)).toThrow(/UNIQUE constraint failed/i);
-    expect(listProyectos(db)).toHaveLength(countAfterFirstRun);
+    expect(() => seed(db)).not.toThrow();
+
+    expect(listProyectos(db)).toHaveLength(proyectoCountAfterFirstRun);
+    expect(listCategorias(db)).toHaveLength(categoriaCountAfterFirstRun);
+    expect(listContactos(db)).toHaveLength(contactoCountAfterFirstRun);
   });
 
   it("supports --reset: wipes existing rows and reseeds cleanly", () => {

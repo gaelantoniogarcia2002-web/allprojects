@@ -1,4 +1,6 @@
+import { eq } from "drizzle-orm";
 import { createDb, type Db } from "@/db/client";
+import { categorias } from "@/db/schema";
 import {
   createCategoria,
   listCategorias,
@@ -98,11 +100,55 @@ const PROYECTOS: ProyectoSeed[] = [
   },
 ];
 
+/**
+ * Inserts `categoria` if `nombre` isn't already present (real DB `UNIQUE`
+ * constraint), otherwise returns the id of the existing row. Uses
+ * `onConflictDoNothing` on the natural key so a concurrent/repeated insert
+ * never throws, then looks the row back up on conflict.
+ */
+function upsertCategoria(db: Db, categoria: NuevaCategoria): number {
+  const inserted = db
+    .insert(categorias)
+    .values(categoria)
+    .onConflictDoNothing()
+    .returning({ id: categorias.id })
+    .get();
+  if (inserted) return inserted.id;
+
+  const existing = db
+    .select({ id: categorias.id })
+    .from(categorias)
+    .where(eq(categorias.nombre, categoria.nombre))
+    .get();
+  if (!existing) {
+    throw new Error(`Seed: categoria "${categoria.nombre}" missing after onConflictDoNothing`);
+  }
+  return existing.id;
+}
+
+/**
+ * Inserts each seed row only when it isn't already present, keyed by its
+ * natural dedup key (`categorias.nombre`, `contactos.nombre`, `proyectos.titulo`
+ * for seed purposes). Re-running against already-seeded data is a no-op:
+ * nothing is duplicated and nothing throws.
+ */
 function insertSeedData(db: Db): void {
-  const categoriaIds = CATEGORIAS.map((categoria) => createCategoria(db, categoria).id);
-  const contactoIds = CONTACTOS.map((contacto) => createContacto(db, contacto).id);
+  const categoriaIds = CATEGORIAS.map((categoria) => upsertCategoria(db, categoria));
+
+  const contactosByNombre = new Map(listContactos(db).map((contacto) => [contacto.nombre, contacto.id]));
+  const contactoIds = CONTACTOS.map((contacto) => {
+    const existingId = contactosByNombre.get(contacto.nombre);
+    if (existingId !== undefined) return existingId;
+    const created = createContacto(db, contacto);
+    contactosByNombre.set(created.nombre, created.id);
+    return created.id;
+  });
+
+  const existingProyectoTitulos = new Set(listProyectos(db).map((proyecto) => proyecto.titulo));
 
   for (const proyectoSeed of PROYECTOS) {
+    if (existingProyectoTitulos.has(proyectoSeed.data.titulo)) continue;
+
     const proyecto = createProyecto(db, {
       ...proyectoSeed.data,
       categoriaId: categoriaIds[proyectoSeed.categoriaIndex],
@@ -130,9 +176,10 @@ function wipe(db: Db): void {
 /**
  * Seeds 3 fictitious proyectos (with categorias, contactos and
  * inspiraciones) in a single transaction. Pass `{ reset: true }` to wipe
- * all existing rows first. Without `reset`, re-running against
- * already-seeded data throws on `UNIQUE(categorias.nombre)` instead of
- * silently duplicating rows — the whole transaction rolls back.
+ * all existing rows first and reseed cleanly. Without `reset`, re-running
+ * against already-seeded data is idempotent: existing rows (matched by
+ * their natural key) are left untouched, nothing is duplicated, and the
+ * script completes without throwing.
  */
 export function seed(db: Db, options: { reset?: boolean } = {}): void {
   db.transaction((tx) => {
