@@ -1,0 +1,370 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "be255d42-5669-428d-bb51-dda994d1339d",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "categorias": {
+      "name": "categorias",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "categorias_nombre_unique": {
+          "name": "categorias_nombre_unique",
+          "columns": [
+            "nombre"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "contactos": {
+      "name": "contactos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "inspiraciones": {
+      "name": "inspiraciones",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "proyecto_id": {
+          "name": "proyecto_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url_origen": {
+          "name": "url_origen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tipo_referencia": {
+          "name": "tipo_referencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "notas": {
+          "name": "notas",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
+        }
+      },
+      "indexes": {
+        "inspiraciones_proyecto_id_idx": {
+          "name": "inspiraciones_proyecto_id_idx",
+          "columns": [
+            "proyecto_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "inspiraciones_proyecto_id_proyectos_id_fk": {
+          "name": "inspiraciones_proyecto_id_proyectos_id_fk",
+          "tableFrom": "inspiraciones",
+          "tableTo": "proyectos",
+          "columnsFrom": [
+            "proyecto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "tipo_referencia_check": {
+          "name": "tipo_referencia_check",
+          "value": "\"inspiraciones\".\"tipo_referencia\" IN ('diseno_ui', 'stack_tecnologico', 'funcionalidad', 'otro')"
+        }
+      }
+    },
+    "proyecto_contactos": {
+      "name": "proyecto_contactos",
+      "columns": {
+        "proyecto_id": {
+          "name": "proyecto_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contacto_id": {
+          "name": "contacto_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "proyecto_contactos_proyecto_id_proyectos_id_fk": {
+          "name": "proyecto_contactos_proyecto_id_proyectos_id_fk",
+          "tableFrom": "proyecto_contactos",
+          "tableTo": "proyectos",
+          "columnsFrom": [
+            "proyecto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "proyecto_contactos_contacto_id_contactos_id_fk": {
+          "name": "proyecto_contactos_contacto_id_contactos_id_fk",
+          "tableFrom": "proyecto_contactos",
+          "tableTo": "contactos",
+          "columnsFrom": [
+            "contacto_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "proyecto_contactos_proyecto_id_contacto_id_pk": {
+          "columns": [
+            "proyecto_id",
+            "contacto_id"
+          ],
+          "name": "proyecto_contactos_proyecto_id_contacto_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "proyectos": {
+      "name": "proyectos",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "categoria_id": {
+          "name": "categoria_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tiempo_estimado_h": {
+          "name": "tiempo_estimado_h",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tiempo_invertido_h": {
+          "name": "tiempo_invertido_h",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "frecuencia_avance": {
+          "name": "frecuencia_avance",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "monto_pago": {
+          "name": "monto_pago",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "carpeta_drive_url": {
+          "name": "carpeta_drive_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "repositorio_gh_url": {
+          "name": "repositorio_gh_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(datetime('now'))"
+        }
+      },
+      "indexes": {
+        "proyectos_categoria_id_idx": {
+          "name": "proyectos_categoria_id_idx",
+          "columns": [
+            "categoria_id"
+          ],
+          "isUnique": false
+        },
+        "proyectos_estado_idx": {
+          "name": "proyectos_estado_idx",
+          "columns": [
+            "estado"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "proyectos_categoria_id_categorias_id_fk": {
+          "name": "proyectos_categoria_id_categorias_id_fk",
+          "tableFrom": "proyectos",
+          "tableTo": "categorias",
+          "columnsFrom": [
+            "categoria_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "estado_check": {
+          "name": "estado_check",
+          "value": "\"proyectos\".\"estado\" IN ('idea', 'en_desarrollo', 'pausado', 'finalizado')"
+        },
+        "frecuencia_avance_check": {
+          "name": "frecuencia_avance_check",
+          "value": "\"proyectos\".\"frecuencia_avance\" IN ('diario', 'semanal', 'ocasional')"
+        },
+        "tiempo_estimado_h_check": {
+          "name": "tiempo_estimado_h_check",
+          "value": "\"proyectos\".\"tiempo_estimado_h\" >= 0"
+        },
+        "tiempo_invertido_h_check": {
+          "name": "tiempo_invertido_h_check",
+          "value": "\"proyectos\".\"tiempo_invertido_h\" >= 0"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
