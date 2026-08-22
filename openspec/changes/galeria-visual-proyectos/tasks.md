@@ -55,25 +55,25 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Filtering (PR 3)
 
-- [ ] 3.1 RED: write `src/components/filters/filter-bar.test.tsx` covering categoría-only select, contacto-only select, clearing a filter, and combined AND intersection reflected via `buildGalleryHref` calls.
-- [ ] 3.2 GREEN: create `src/components/filters/filter-bar.tsx` (`'use client'`) using `useRouter`/`useSearchParams`, calling `router.push(buildGalleryHref(...), { scroll: false })`.
-- [ ] 3.3 GREEN: wire `<FilterBar>` into `src/app/page.tsx`, passing `categoriaId`/`contactoId` from `parseGalleryParams` into `listProyectos`.
-- [ ] 3.4 RED: extend `src/components/gallery/empty-state.test.tsx` (or add `no-matches` variant) for zero-results-after-filter, distinct from the no-proyectos-seeded state.
-- [ ] 3.5 GREEN: render the no-matches empty state in `page.tsx` when filters are active and the filtered list is empty.
-- [ ] 3.6 Integration test: extend `src/app/page.test.tsx` with `?categoria=` and `?categoria=&contacto=` fixtures asserting narrowed results and reload-reproducibility.
-- [ ] 3.7 Manual verification: `npm run dev`, apply/clear filters, confirm URL updates and reload reproduces the same filtered view.
+- [x] 3.1 RED: write `src/components/filters/filter-bar.test.tsx` covering categoría-only select, contacto-only select, clearing a filter, and combined AND intersection reflected via `buildGalleryHref` calls.
+- [x] 3.2 GREEN: create `src/components/filters/filter-bar.tsx` (`'use client'`) using `useRouter`/`useSearchParams`, calling `router.push(buildGalleryHref(...), { scroll: false })`.
+- [x] 3.3 GREEN: wire `<FilterBar>` into `src/app/page.tsx`, passing `categoriaId`/`contactoId` from `parseGalleryParams` into `listProyectos`.
+- [x] 3.4 RED: extend `src/components/gallery/empty-state.test.tsx` (or add `no-matches` variant) for zero-results-after-filter, distinct from the no-proyectos-seeded state.
+- [x] 3.5 GREEN: render the no-matches empty state in `page.tsx` when filters are active and the filtered list is empty.
+- [x] 3.6 Integration test: extend `src/app/page.test.tsx` with `?categoria=` and `?categoria=&contacto=` fixtures asserting narrowed results and reload-reproducibility.
+- [x] 3.7 Manual verification: `npm run dev`, apply/clear filters, confirm URL updates and reload reproduces the same filtered view.
 
 ## Phase 4: Comparison Module (PR 4)
 
-- [ ] 4.1 RED: write `src/components/comparison/comparison-toggle.test.tsx` (toggling writes `modo=comparar` to URL; disabling clears `seleccion`).
-- [ ] 4.2 GREEN: create `src/components/comparison/comparison-toggle.tsx` (`'use client'`).
-- [ ] 4.3 RED: write `src/components/comparison/selection-checkbox.test.tsx` (checked state reflects `seleccion` param, toggling updates URL list).
-- [ ] 4.4 GREEN: create `src/components/comparison/selection-checkbox.tsx` (`'use client'`); wire into `proyecto-card.tsx` shown only when `comparisonMode` is true.
-- [ ] 4.5 RED: write `src/components/comparison/comparison-table.test.tsx` covering rows for `tiempo_estimado_h`, `tiempo_invertido_h`, `monto_pago` (explicit "not set" when absent), `frecuencia_avance`, one column per selected proyecto.
-- [ ] 4.6 GREEN: create `src/components/comparison/comparison-table.tsx` (presentational) to pass 4.5.
-- [ ] 4.7 RED: write `src/components/comparison/comparison-overlay.test.tsx` covering open-with-2+-selections, blocked-open-with-<2-selections with an indicating message, and close-returns-to-selection-intact.
-- [ ] 4.8 GREEN: create `src/components/comparison/comparison-overlay.tsx` (`'use client'`) composing 4.6, gated on `comparisonMode && seleccion.length >= 2`.
-- [ ] 4.9 GREEN: wire `<ComparisonToggle>` and `<ComparisonOverlay>` into `src/app/page.tsx`.
-- [ ] 4.10 Integration test: extend `src/app/page.test.tsx` with `?modo=comparar&seleccion=1,3` fixture asserting overlay content matches selected proyectos.
-- [ ] 4.11 Manual verification: `npm run dev`, enable comparison mode, select 2+, open/close overlay, confirm table values and URL persistence.
-- [ ] 4.12 Final check: `npm test` and `npm run build` pass end-to-end; update `proposal.md` Success Criteria checkboxes.
+- [x] 4.1 RED: write `src/components/comparison/comparison-toggle.test.tsx` (toggling writes `modo=comparar` to URL; disabling clears `seleccion`).
+- [x] 4.2 GREEN: create `src/components/comparison/comparison-toggle.tsx` (`'use client'`).
+- [x] 4.3 RED: write `src/components/comparison/selection-checkbox.test.tsx` (checked state reflects `seleccion` param, toggling updates URL list).
+- [x] 4.4 GREEN: create `src/components/comparison/selection-checkbox.tsx` (`'use client'`); wire into `proyecto-card.tsx` shown only when `comparisonMode` is true.
+- [x] 4.5 RED: write `src/components/comparison/comparison-table.test.tsx` covering rows for `tiempo_estimado_h`, `tiempo_invertido_h`, `monto_pago` (explicit "not set" when absent), `frecuencia_avance`, one column per selected proyecto.
+- [x] 4.6 GREEN: create `src/components/comparison/comparison-table.tsx` (presentational) to pass 4.5.
+- [x] 4.7 RED: write `src/components/comparison/comparison-overlay.test.tsx` covering open-with-2+-selections, blocked-open-with-<2-selections with an indicating message, and close-returns-to-selection-intact.
+- [x] 4.8 GREEN: create `src/components/comparison/comparison-overlay.tsx` (`'use client'`) composing 4.6, gated on `comparisonMode && seleccion.length >= 2`.
+- [x] 4.9 GREEN: wire `<ComparisonToggle>` and `<ComparisonOverlay>` into `src/app/page.tsx`.
+- [x] 4.10 Integration test: extend `src/app/page.test.tsx` with `?modo=comparar&seleccion=1,3` fixture asserting overlay content matches selected proyectos.
+- [x] 4.11 Manual verification: `npm run dev`, enable comparison mode, select 2+, open/close overlay, confirm table values and URL persistence.
+- [x] 4.12 Final check: `npm test` and `npm run build` pass end-to-end; update `proposal.md` Success Criteria checkboxes.

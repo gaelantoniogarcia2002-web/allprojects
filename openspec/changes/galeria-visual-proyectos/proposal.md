@@ -75,9 +75,9 @@ Frontend-only and additive. Revert the PR: `src/app/page.tsx` returns to the pla
 
 ## Success Criteria
 
-- [ ] Gallery renders every seeded proyecto with card area visibly proportional to `tiempo_estimado_h` and no layout gaps.
-- [ ] Each card shows the categoría color as a transparent background with a solid fill at the correct progress percentage.
-- [ ] Projects with `tiempo_invertido_h > tiempo_estimado_h` show the red border + `⚠ Excedido` badge.
-- [ ] Filtering by categoría and/or contacto narrows the gallery, and the resulting URL reproduces the same view when reloaded or shared.
-- [ ] Selecting 2+ projects in Modo Comparación opens an overlay comparing tiempos, montos and frecuencia for exactly those projects.
-- [ ] Pure geometry/progress functions are unit-tested (including 0 hours and extreme spreads); `npm test` and `npm run build` pass.
+- [x] Gallery renders every seeded proyecto with card area visibly proportional to `tiempo_estimado_h` and no layout gaps.
+- [x] Each card shows the categoría color as a transparent background with a solid fill at the correct progress percentage.
+- [x] Projects with `tiempo_invertido_h > tiempo_estimado_h` show the red border + `⚠ Excedido` badge.
+- [x] Filtering by categoría and/or contacto narrows the gallery, and the resulting URL reproduces the same view when reloaded or shared.
+- [x] Selecting 2+ projects in Modo Comparación opens an overlay comparing tiempos, montos and frecuencia for exactly those projects.
+- [x] Pure geometry/progress functions are unit-tested (including 0 hours and extreme spreads); `npm test` and `npm run build` pass.
