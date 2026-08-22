@@ -1,7 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { ProyectoCard } from "./proyecto-card";
 import type { GalleryTile } from "@/lib/gallery/types";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+import { ProyectoCard } from "./proyecto-card";
 
 function baseTile(overrides: Partial<GalleryTile> = {}): GalleryTile {
   return {
@@ -54,5 +60,19 @@ describe("ProyectoCard", () => {
       borderTopStyle: "solid",
       borderTopColor: "rgb(255, 0, 0)",
     });
+  });
+
+  it("shows a selection checkbox when comparisonMode is true", () => {
+    const tile = baseTile();
+    render(<ProyectoCard tile={tile} comparisonMode />);
+
+    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+  });
+
+  it("hides the selection checkbox when comparisonMode is false or omitted", () => {
+    const tile = baseTile();
+    render(<ProyectoCard tile={tile} />);
+
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
 });

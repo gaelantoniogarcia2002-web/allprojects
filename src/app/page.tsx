@@ -8,6 +8,8 @@ import type { GalleryTile } from "@/lib/gallery/types";
 import { GalleryGrid } from "@/components/gallery/gallery-grid";
 import { EmptyState } from "@/components/gallery/empty-state";
 import { FilterBar } from "@/components/filters/filter-bar";
+import { ComparisonToggle } from "@/components/comparison/comparison-toggle";
+import { ComparisonOverlay } from "@/components/comparison/comparison-overlay";
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
@@ -45,6 +47,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <main>
         <h1>Base de Datos Visual de Proyectos</h1>
         <FilterBar categorias={categorias} contactos={contactos} />
+        <ComparisonToggle />
         <EmptyState variant={hasAnyProyectos ? "no-matches" : "no-proyectos"} />
       </main>
     );
@@ -81,7 +84,9 @@ export default async function Home({ searchParams }: HomeProps) {
     <main>
       <h1>Base de Datos Visual de Proyectos</h1>
       <FilterBar categorias={categorias} contactos={contactos} />
-      <GalleryGrid tiles={tiles} />
+      <ComparisonToggle />
+      <ComparisonOverlay tiles={tiles} />
+      <GalleryGrid tiles={tiles} comparisonMode={params.comparisonMode} />
     </main>
   );
 }
