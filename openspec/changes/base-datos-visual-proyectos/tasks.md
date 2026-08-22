@@ -48,21 +48,22 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Repository Layer (PR 3)
 
-- [ ] 3.1 `src/db/types.ts` — `Proyecto`, `NuevoProyecto`, `ProyectoConDetalle`, `FiltroProyectos`, `Categoria`, `Contacto`, `Inspiracion`
-- [ ] 3.2 `src/db/errors.ts` — `CategoriaEnUsoError`, `NotFoundError`
-- [ ] 3.3 RED: `tests/repositories/categorias.test.ts` — create, list, delete throws when referenced, delete succeeds when unreferenced
-- [ ] 3.4 GREEN: `src/db/repositories/categorias.ts`
-- [ ] 3.5 RED: `tests/repositories/contactos.test.ts` — create, list, `vincularContacto`/`desvincularContacto` idempotent, delete cascades join rows only
-- [ ] 3.6 GREEN: `src/db/repositories/contactos.ts`
-- [ ] 3.7 RED: `tests/repositories/proyectos.test.ts` — create defaults `tiempo_invertido_h=0`, `listProyectos` filters by estado/categoria/contacto, `getProyectoConDetalle` nested joins, update bumps `updated_at`, delete cascades
-- [ ] 3.8 GREEN: `src/db/repositories/proyectos.ts`
-- [ ] 3.9 RED: `tests/repositories/inspiraciones.test.ts` — create, list by proyecto, delete
-- [ ] 3.10 GREEN: `src/db/repositories/inspiraciones.ts`
-- [ ] 3.11 `src/db/repositories/index.ts` — barrel export
+- [x] 3.1 `src/db/types.ts` — `Proyecto`, `NuevoProyecto`, `ProyectoConDetalle`, `FiltroProyectos`, `Categoria`, `Contacto`, `Inspiracion`
+- [x] 3.2 `src/db/errors.ts` — `CategoriaEnUsoError`, `NotFoundError`
+- [x] 3.3 RED: `tests/repositories/categorias.test.ts` — create, list, delete throws when referenced, delete succeeds when unreferenced
+- [x] 3.4 GREEN: `src/db/repositories/categorias.ts`
+- [x] 3.5 RED: `tests/repositories/contactos.test.ts` — create, list, `vincularContacto`/`desvincularContacto` idempotent, delete cascades join rows only
+- [x] 3.6 GREEN: `src/db/repositories/contactos.ts`
+- [x] 3.7 RED: `tests/repositories/proyectos.test.ts` — create defaults `tiempo_invertido_h=0`, `listProyectos` filters by estado/categoria/contacto, `getProyectoConDetalle` nested joins, update bumps `updated_at`, delete cascades
+- [x] 3.8 GREEN: `src/db/repositories/proyectos.ts`
+- [x] 3.9 RED: `tests/repositories/inspiraciones.test.ts` — create, list by proyecto, delete
+- [x] 3.10 GREEN: `src/db/repositories/inspiraciones.ts`
+- [x] 3.11 `src/db/repositories/index.ts` — barrel export
 
 ## Phase 4: Seed Script & Verification (PR 4)
 
-- [ ] 4.1 RED: `tests/seed.test.ts` — seed on temp-file DB yields 2-3 proyectos with categoria+contacto+inspiracion, >=2 distinct `estado`, re-run without `--reset` fails on UNIQUE(nombre) not silent dup
-- [ ] 4.2 GREEN: `scripts/seed.ts` — single transaction, `--reset` flag, 3 categorias/contactos/proyectos (one over-budget, one `monto_pago: null`) inserted via repositories, 1-3 inspiraciones/proyecto spanning `tipo_referencia`
-- [ ] 4.3 Update `openspec/config.yaml` `rules.apply.test_command` / `rules.verify.test_command` with the real `npm test` invocation
-- [ ] 4.4 Verify proposal success criteria: `npm run dev`, `npm test`, `npm run db:seed` idempotent, a repository query returns a seeded project with joined categoria/contactos/inspiraciones
+- [x] 4.1 RED: `tests/seed.test.ts` — seed on temp-file DB yields 2-3 proyectos with categoria+contacto+inspiracion, >=2 distinct `estado`, re-run without `--reset` is idempotent (no throw, no duplication)
+- [x] 4.2 GREEN: `scripts/seed.ts` — single transaction, `--reset` flag, 3 categorias/contactos/proyectos (one over-budget, one `monto_pago: null`) inserted via repositories, 1-3 inspiraciones/proyecto spanning `tipo_referencia`
+- [x] 4.3 Update `openspec/config.yaml` `rules.apply.test_command` / `rules.verify.test_command` with the real `npm test` invocation
+- [x] 4.4 Verify proposal success criteria: `npm run dev`, `npm test`, `npm run db:seed` idempotent, a repository query returns a seeded project with joined categoria/contactos/inspiraciones
+- [x] 4.5 (verify-fix) Corrected `scripts/seed.ts` to satisfy `data-seeding` spec's "Re-run the seed script" scenario literally: re-running without `--reset` now upserts on natural keys (`categorias.nombre` via `onConflictDoNothing`, `contactos.nombre` and `proyectos.titulo` via app-level pre-check) instead of throwing a `UNIQUE` constraint error. `tests/seed.test.ts`'s re-run test now asserts the corrected idempotent behavior.
