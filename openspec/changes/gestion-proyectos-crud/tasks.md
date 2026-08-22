@@ -48,13 +48,13 @@ Threat matrix: N/A (design.md confirms no shell/subprocess/VCS boundary in this 
 
 ## Phase 2 (PR 2 — proyecto creation)
 
-- [ ] 2.1 RED `tests/lib/forms/parse-proyecto.test.ts` — every enum/empty/negative/NaN/missing-categoria branch.
-- [ ] 2.2 GREEN `src/lib/forms/result.ts` (`ActionResult`, `ok`/`fail`, `toActionError`) + `src/lib/forms/parse-proyecto.ts`.
-- [ ] 2.3 RED `tests/app/proyectos/nuevo/actions.test.ts` — valid insert + `revalidatePath`/`redirect` spy args; invalid data → `{ok:false}`.
-- [ ] 2.4 GREEN `src/app/proyectos/nuevo/{page.tsx,actions.ts}` (apply Phase 0 split if needed).
-- [ ] 2.5 RED/GREEN `src/components/forms/{contacto-checkbox-list,proyecto-form,form-error,confirm-submit-button}.tsx` — RTL asserts `formData.getAll("contactoId")` payload.
-- [ ] 2.6 Test: re-submitting an already-linked contacto stays idempotent (no duplicate join row).
-- [ ] 2.7 `npm test` + `npm run build`.
+- [x] 2.1 RED `tests/lib/forms/parse-proyecto.test.ts` — every enum/empty/negative/NaN/missing-categoria branch.
+- [x] 2.2 GREEN `src/lib/forms/result.ts` (`ActionResult`, `ok`/`fail`, `toActionError`) + `src/lib/forms/parse-proyecto.ts`.
+- [x] 2.3 RED `tests/app/proyectos/nuevo/actions.test.ts` — valid insert + `revalidatePath`/`redirect` spy args; invalid data → `{ok:false}`.
+- [x] 2.4 GREEN `src/app/proyectos/nuevo/{page.tsx,actions.ts}` (apply Phase 0 split if needed).
+- [x] 2.5 RED/GREEN `src/components/forms/{contacto-checkbox-list,proyecto-form,form-error,confirm-submit-button}.tsx` — RTL asserts `formData.getAll("contactoId")` payload.
+- [x] 2.6 Test: re-submitting an already-linked contacto stays idempotent (no duplicate join row).
+- [x] 2.7 `npm test` + `npm run build`.
 
 ## Phase 3 (PR 3 — proyecto detail/edit/delete + inspiraciones)
 
