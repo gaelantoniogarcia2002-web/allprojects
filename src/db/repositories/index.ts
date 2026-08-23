@@ -1,6 +1,7 @@
 export {
   createCategoria,
   listCategorias,
+  updateCategoria,
   deleteCategoria,
 } from "./categorias";
 
@@ -9,6 +10,7 @@ export {
   listContactos,
   vincularContacto,
   desvincularContacto,
+  updateContacto,
   deleteContacto,
 } from "./contactos";
 

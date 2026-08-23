@@ -75,4 +75,21 @@ describe("ProyectoCard", () => {
 
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   });
+
+  it("wraps the title in a link to the proyecto's detail route when not in comparison mode", () => {
+    const tile = baseTile({ id: 7, titulo: "Brazo robótico" });
+    render(<ProyectoCard tile={tile} />);
+
+    const link = screen.getByRole("link", { name: "Brazo robótico" });
+    expect(link).toHaveAttribute("href", "/proyectos/7");
+  });
+
+  it("suppresses the detail link during comparison mode so activating the card selects instead of navigating (project-gallery: Card navigation suppressed during comparison mode)", () => {
+    const tile = baseTile({ id: 7, titulo: "Brazo robótico" });
+    render(<ProyectoCard tile={tile} comparisonMode />);
+
+    expect(screen.queryByRole("link", { name: "Brazo robótico" })).not.toBeInTheDocument();
+    expect(screen.getByText("Brazo robótico")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox")).toBeInTheDocument();
+  });
 });

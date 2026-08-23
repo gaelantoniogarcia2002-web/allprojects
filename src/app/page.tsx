@@ -5,6 +5,7 @@ import { computeTileLayout } from "@/lib/gallery/tile-geometry";
 import { computeProgress } from "@/lib/gallery/progress";
 import { toTint, toSolid } from "@/lib/gallery/color";
 import type { GalleryTile } from "@/lib/gallery/types";
+import Link from "next/link";
 import { GalleryGrid } from "@/components/gallery/gallery-grid";
 import { EmptyState } from "@/components/gallery/empty-state";
 import { FilterBar } from "@/components/filters/filter-bar";
@@ -16,6 +17,21 @@ type RawSearchParams = Record<string, string | string[] | undefined>;
 type HomeProps = {
   searchParams: Promise<RawSearchParams>;
 };
+
+/**
+ * Gallery entry points (`project-gallery` / `project-authoring`): create a
+ * proyecto or jump to the standalone taxonomy management screens. Rendered
+ * on both the empty-state and populated branches below.
+ */
+function GalleryEntryLinks() {
+  return (
+    <nav aria-label="Accesos rápidos">
+      <Link href="/proyectos/nuevo">Nuevo proyecto</Link>
+      <Link href="/categorias">Categorías</Link>
+      <Link href="/contactos">Contactos</Link>
+    </nav>
+  );
+}
 
 /**
  * Async gallery Server Component (Fase 2). Reads filters from the URL,
@@ -46,6 +62,7 @@ export default async function Home({ searchParams }: HomeProps) {
     return (
       <main>
         <h1>Base de Datos Visual de Proyectos</h1>
+        <GalleryEntryLinks />
         <FilterBar categorias={categorias} contactos={contactos} />
         <ComparisonToggle />
         <EmptyState variant={hasAnyProyectos ? "no-matches" : "no-proyectos"} />
@@ -83,6 +100,7 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <main>
       <h1>Base de Datos Visual de Proyectos</h1>
+      <GalleryEntryLinks />
       <FilterBar categorias={categorias} contactos={contactos} />
       <ComparisonToggle />
       <ComparisonOverlay tiles={tiles} />

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Db } from "../client";
 import { categorias } from "../schema";
 import type { Categoria, NuevaCategoria } from "../types";
-import { CategoriaEnUsoError } from "../errors";
+import { CategoriaEnUsoError, NotFoundError } from "../errors";
 
 export function createCategoria(db: Db, input: NuevaCategoria): Categoria {
   return db.insert(categorias).values(input).returning().get();
@@ -13,18 +13,37 @@ export function listCategorias(db: Db): Categoria[] {
 }
 
 /**
+ * Applies a partial patch (`nombre` and/or `color`) to a categoria.
+ * Throws `NotFoundError` when no categoria with `id` exists.
+ */
+export function updateCategoria(db: Db, id: number, patch: Partial<NuevaCategoria>): Categoria {
+  const updated = db.update(categorias).set(patch).where(eq(categorias.id, id)).returning().get();
+  if (!updated) {
+    throw new NotFoundError("Categoria", id);
+  }
+  return updated;
+}
+
+/**
  * Deletes a categoria. Throws `CategoriaEnUsoError` when the delete is
  * rejected by the `categoria_id` FK `RESTRICT` because at least one
- * `Proyecto` still references it.
+ * `Proyecto` still references it — that check runs first, so
+ * `CategoriaEnUsoError` always wins over `NotFoundError` for an id that is
+ * both missing and (impossibly) in use. Throws `NotFoundError` when no
+ * categoria with `id` exists.
  */
 export function deleteCategoria(db: Db, id: number): void {
+  let result: { changes: number };
   try {
-    db.delete(categorias).where(eq(categorias.id, id)).run();
+    result = db.delete(categorias).where(eq(categorias.id, id)).run();
   } catch (err) {
     if (isForeignKeyConstraintError(err)) {
       throw new CategoriaEnUsoError(id);
     }
     throw err;
+  }
+  if (result.changes === 0) {
+    throw new NotFoundError("Categoria", id);
   }
 }
 

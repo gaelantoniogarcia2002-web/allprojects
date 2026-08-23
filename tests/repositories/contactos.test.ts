@@ -5,12 +5,14 @@ import {
   listContactos,
   vincularContacto,
   desvincularContacto,
+  updateContacto,
   deleteContacto,
 } from "@/db/repositories/contactos";
 import { createCategoria } from "@/db/repositories/categorias";
 import { createProyecto } from "@/db/repositories/proyectos";
 import { proyectoContactos, proyectos } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { NotFoundError } from "@/db/errors";
 
 function makeProyecto(db: TestDb, titulo = "Brazo robótico") {
   const categoria = createCategoria(db, { nombre: "Robótica", color: "#3B82F6" });
@@ -100,6 +102,30 @@ describe("contactos repository", () => {
     });
   });
 
+  describe("updateContacto", () => {
+    it("updates a contacto's nombre", () => {
+      const contacto = createContacto(db, { nombre: "Ada Lovelace", url: null });
+
+      const updated = updateContacto(db, contacto.id, { nombre: "Ada King" });
+
+      expect(updated.nombre).toBe("Ada King");
+      expect(updated.url).toBeNull();
+    });
+
+    it("updates a contacto's url", () => {
+      const contacto = createContacto(db, { nombre: "Ada Lovelace", url: null });
+
+      const updated = updateContacto(db, contacto.id, { url: "https://example.com" });
+
+      expect(updated.url).toBe("https://example.com");
+      expect(updated.nombre).toBe("Ada Lovelace");
+    });
+
+    it("throws NotFoundError for a missing id", () => {
+      expect(() => updateContacto(db, 999, { nombre: "Ghost" })).toThrow(NotFoundError);
+    });
+  });
+
   describe("deleteContacto", () => {
     it("cascades only join rows, leaving the proyecto and other contactos untouched", () => {
       const proyecto = makeProyecto(db);
@@ -108,9 +134,8 @@ describe("contactos repository", () => {
       vincularContacto(db, proyecto.id, contacto.id);
       vincularContacto(db, proyecto.id, otroContacto.id);
 
-      const result = deleteContacto(db, contacto.id);
+      deleteContacto(db, contacto.id);
 
-      expect(result).toBe(true);
       const links = db.select().from(proyectoContactos).where(eq(proyectoContactos.proyectoId, proyecto.id)).all();
       expect(links.map((l) => l.contactoId)).toEqual([otroContacto.id]);
       expect(listContactos(db).map((c) => c.id)).toEqual([otroContacto.id]);
@@ -118,8 +143,8 @@ describe("contactos repository", () => {
       expect(proyectoRow?.id).toBe(proyecto.id);
     });
 
-    it("returns false when the contacto does not exist", () => {
-      expect(deleteContacto(db, 999)).toBe(false);
+    it("throws NotFoundError when the contacto does not exist", () => {
+      expect(() => deleteContacto(db, 999)).toThrow(NotFoundError);
     });
   });
 });
