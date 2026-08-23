@@ -7,6 +7,7 @@ import {
 } from "@/db/repositories/inspiraciones";
 import { createCategoria } from "@/db/repositories/categorias";
 import { createProyecto } from "@/db/repositories/proyectos";
+import { NotFoundError } from "@/db/errors";
 
 let categoriaCounter = 0;
 
@@ -90,7 +91,7 @@ describe("inspiraciones repository", () => {
   });
 
   describe("deleteInspiracion", () => {
-    it("deletes the inspiracion and returns true", () => {
+    it("deletes the inspiracion", () => {
       const proyecto = makeProyecto(db);
       const inspiracion = createInspiracion(db, {
         proyectoId: proyecto.id,
@@ -99,14 +100,13 @@ describe("inspiraciones repository", () => {
         notas: null,
       });
 
-      const result = deleteInspiracion(db, inspiracion.id);
+      deleteInspiracion(db, inspiracion.id);
 
-      expect(result).toBe(true);
       expect(listInspiracionesPorProyecto(db, proyecto.id)).toEqual([]);
     });
 
-    it("returns false when the inspiracion does not exist", () => {
-      expect(deleteInspiracion(db, 999)).toBe(false);
+    it("throws NotFoundError when the inspiracion does not exist", () => {
+      expect(() => deleteInspiracion(db, 999)).toThrow(NotFoundError);
     });
   });
 });
