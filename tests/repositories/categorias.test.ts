@@ -95,6 +95,10 @@ describe("categorias repository", () => {
       expect(listCategorias(db)).toEqual([]);
     });
 
+    it("throws NotFoundError for a missing id", () => {
+      expect(() => deleteCategoria(db, 999)).toThrow(NotFoundError);
+    });
+
     it("regression: FK-restrict precedence — an in-use categoria still throws CategoriaEnUsoError, never NotFoundError", () => {
       const categoria = createCategoria(db, { nombre: "En uso", color: "#3B82F6" });
       createProyecto(db, {
