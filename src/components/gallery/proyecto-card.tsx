@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { GalleryTile } from "@/lib/gallery/types";
 import { ProgressFill } from "./progress-fill";
 import { OverBudgetBadge } from "./over-budget-badge";
@@ -24,7 +25,13 @@ export function ProyectoCard({ tile, comparisonMode = false }: ProyectoCardProps
       <ProgressFill tintColor={tile.tintColor} solidColor={tile.solidColor} percent={tile.percent} />
       <div className="relative z-10 flex flex-1 flex-col justify-between gap-1 p-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">{tile.titulo}</h3>
+          <h3 className="text-sm font-medium">
+            {comparisonMode ? (
+              tile.titulo
+            ) : (
+              <Link href={`/proyectos/${tile.id}`}>{tile.titulo}</Link>
+            )}
+          </h3>
           {comparisonMode && <SelectionCheckbox proyectoId={tile.id} />}
         </div>
         <div className="flex items-center justify-between text-xs">

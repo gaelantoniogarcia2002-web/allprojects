@@ -72,6 +72,17 @@ describe("Home page (gallery Server Component)", () => {
     expect(screen.getByRole("heading", { name: "Base de Datos Visual de Proyectos" })).toBeInTheDocument();
   });
 
+  it("renders entry-point links to create a proyecto and to the taxonomy screens", async () => {
+    const db: TestDb = makeTestDb();
+    mockGetDb.mockReturnValue(db);
+
+    await renderHome();
+
+    expect(screen.getByRole("link", { name: "Nuevo proyecto" })).toHaveAttribute("href", "/proyectos/nuevo");
+    expect(screen.getByRole("link", { name: "Categorías" })).toHaveAttribute("href", "/categorias");
+    expect(screen.getByRole("link", { name: "Contactos" })).toHaveAttribute("href", "/contactos");
+  });
+
   it("shows the no-proyectos empty state when the database has zero rows", async () => {
     const db: TestDb = makeTestDb();
     mockGetDb.mockReturnValue(db);

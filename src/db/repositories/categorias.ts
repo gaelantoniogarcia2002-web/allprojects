@@ -27,16 +27,23 @@ export function updateCategoria(db: Db, id: number, patch: Partial<NuevaCategori
 /**
  * Deletes a categoria. Throws `CategoriaEnUsoError` when the delete is
  * rejected by the `categoria_id` FK `RESTRICT` because at least one
- * `Proyecto` still references it.
+ * `Proyecto` still references it — that check runs first, so
+ * `CategoriaEnUsoError` always wins over `NotFoundError` for an id that is
+ * both missing and (impossibly) in use. Throws `NotFoundError` when no
+ * categoria with `id` exists.
  */
 export function deleteCategoria(db: Db, id: number): void {
+  let result: { changes: number };
   try {
-    db.delete(categorias).where(eq(categorias.id, id)).run();
+    result = db.delete(categorias).where(eq(categorias.id, id)).run();
   } catch (err) {
     if (isForeignKeyConstraintError(err)) {
       throw new CategoriaEnUsoError(id);
     }
     throw err;
+  }
+  if (result.changes === 0) {
+    throw new NotFoundError("Categoria", id);
   }
 }
 
